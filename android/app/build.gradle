@@ -220,6 +220,11 @@ dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
+    // Android TV Leanback Support Library
+    implementation "androidx.leanback:leanback:1.0.0"
+    // TV Preferences for settings screens on TV
+    implementation "androidx.leanback:leanback-preference:1.0.0"
+
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
     def isWebpAnimatedEnabled = (findProperty('expo.webp.animated') ?: "") == "true";

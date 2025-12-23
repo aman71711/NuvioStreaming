@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '../../contexts/ToastContext';
 import { DeviceEventEmitter } from 'react-native';
-import { View, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions, Platform, Text, Share } from 'react-native';
+import { View, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions, Platform, Text, Share, Animated } from 'react-native';
 import FastImage from '@d11/react-native-fast-image';
 import { MaterialIcons, Feather } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -12,13 +12,17 @@ import { mmkvStorage } from '../../services/mmkvStorage';
 import { storageService } from '../../services/storageService';
 import { TraktService } from '../../services/traktService';
 import { useTraktContext } from '../../contexts/TraktContext';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import AnimatedReanimated, { FadeIn } from 'react-native-reanimated';
+import { isTV, tvDimensions } from '../../utils/tvPlatform';
 
 interface ContentItemProps {
   item: StreamingContent;
   onPress: (id: string, type: string) => void;
   shouldLoadImage?: boolean;
   deferMs?: number;
+  hasTVPreferredFocus?: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 const { width } = Dimensions.get('window');
@@ -81,9 +85,13 @@ const calculatePosterLayout = (screenWidth: number) => {
 const posterLayout = calculatePosterLayout(width);
 const POSTER_WIDTH = posterLayout.posterWidth;
 
-const ContentItem = ({ item, onPress, shouldLoadImage: shouldLoadImageProp, deferMs = 0 }: ContentItemProps) => {
+const ContentItem = ({ item, onPress, shouldLoadImage: shouldLoadImageProp, deferMs = 0, hasTVPreferredFocus = false, onFocus, onBlur }: ContentItemProps) => {
   // Track inLibrary status locally to force re-render
   const [inLibrary, setInLibrary] = useState(!!item.inLibrary);
+  
+  // TV Focus state
+  const [isFocused, setIsFocused] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     // Subscribe to library updates and update local state if this item's status changes
@@ -112,6 +120,33 @@ const ContentItem = ({ item, onPress, shouldLoadImage: shouldLoadImageProp, defe
 
   // Trakt integration
   const { isAuthenticated, isInWatchlist, isInCollection, addToWatchlist, removeFromWatchlist, addToCollection, removeFromCollection } = useTraktContext();
+
+  // TV Focus handlers
+  const handleTVFocus = useCallback(() => {
+    setIsFocused(true);
+    onFocus?.();
+    if (isTV) {
+      Animated.spring(scaleAnim, {
+        toValue: 1.1,
+        friction: 8,
+        tension: 100,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [onFocus, scaleAnim]);
+
+  const handleTVBlur = useCallback(() => {
+    setIsFocused(false);
+    onBlur?.();
+    if (isTV) {
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 100,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [onBlur, scaleAnim]);
 
   useEffect(() => {
     // Reset image error state when item changes, allowing for retry on re-render
@@ -299,16 +334,43 @@ const ContentItem = ({ item, onPress, shouldLoadImage: shouldLoadImageProp, defe
     );
   }
 
+  // TV focus styles
+  const tvFocusStyle = isFocused && isTV ? {
+    borderWidth: tvDimensions.focusRingWidth,
+    borderColor: '#4A90D9',
+    shadowColor: '#4A90D9',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 15,
+    elevation: 10,
+  } : {};
+
   return (
     <>
-      <Animated.View style={[styles.itemContainer, { width: finalWidth }]} entering={FadeIn.duration(300)}>
-        <TouchableOpacity
-          style={[styles.contentItem, { width: finalWidth, aspectRatio: finalAspectRatio, borderRadius }]}
-          activeOpacity={0.7}
-          onPress={handlePress}
-          onLongPress={handleLongPress}
-          delayLongPress={300}
-        >
+      <Animated.View 
+        style={[
+          styles.itemContainer, 
+          { width: finalWidth, transform: [{ scale: scaleAnim }] }
+        ]}
+      >
+        <AnimatedReanimated.View entering={FadeIn.duration(300)}>
+          <TouchableOpacity
+            style={[
+              styles.contentItem, 
+              { width: finalWidth, aspectRatio: finalAspectRatio, borderRadius },
+              tvFocusStyle
+            ]}
+            activeOpacity={isTV ? 1 : 0.7}
+            onPress={handlePress}
+            onLongPress={handleLongPress}
+            delayLongPress={300}
+            onFocus={handleTVFocus}
+            onBlur={handleTVBlur}
+            hasTVPreferredFocus={hasTVPreferredFocus}
+            accessible={true}
+            accessibilityLabel={`${item.name}, ${item.type}`}
+            accessibilityRole="button"
+          >
           <View ref={itemRef} style={[styles.contentItemContainer, { borderRadius }]}>
             {/* Image with FastImage for aggressive caching */}
             {item.poster ? (
@@ -363,6 +425,7 @@ const ContentItem = ({ item, onPress, shouldLoadImage: shouldLoadImageProp, defe
             )}
           </View>
         </TouchableOpacity>
+        </AnimatedReanimated.View>
         {settings.showPosterTitles && (
           <Text
             style={[

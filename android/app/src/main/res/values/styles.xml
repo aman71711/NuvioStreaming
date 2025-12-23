@@ -9,4 +9,14 @@
   <style name="Theme.App.SplashScreen" parent="AppTheme">
     <item name="android:windowBackground">@drawable/ic_launcher_background</item>
   </style>
+  <!-- Android TV Theme -->
+  <style name="Theme.App.TV" parent="Theme.Leanback">
+    <item name="android:windowBackground">@color/activityBackground</item>
+    <item name="android:colorPrimary">@color/colorPrimary</item>
+    <item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
+    <item name="android:windowIsTranslucent">false</item>
+    <item name="android:windowNoTitle">true</item>
+    <item name="android:windowActionBar">false</item>
+    <item name="android:backgroundDimEnabled">true</item>
+  </style>
 </resources>

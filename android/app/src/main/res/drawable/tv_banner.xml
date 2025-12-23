@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android TV Leanback Banner - 320x180dp -->
+<!-- This is a placeholder banner. Replace with your actual TV banner image -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#020404"/>
+        </shape>
+    </item>
+    <!-- Gradient overlay -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="135"
+                android:startColor="#023c69"
+                android:endColor="#020404"
+                android:type="linear"/>
+        </shape>
+    </item>
+    <!-- App name text would go here - for production, use actual banner image -->
+    <item
+        android:gravity="center"
+        android:drawable="@mipmap/ic_launcher"/>
+</layer-list>
