@@ -4,9 +4,15 @@
  * Handles D-pad navigation, media keys, and back button for Android TV
  */
 
-import React, { useEffect, useRef, useCallback } from 'react';
-import { Platform, TVEventHandler, BackHandler } from 'react-native';
+import React, { useEffect, useCallback } from 'react';
+import { Platform, BackHandler, DeviceEventEmitter } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+
+interface TVEvent {
+  eventType: string;
+  eventKeyAction?: number;
+  tag?: number;
+}
 
 interface TVRemoteHandlerProps {
   children: React.ReactNode;
@@ -15,7 +21,6 @@ interface TVRemoteHandlerProps {
 
 const TVRemoteHandler: React.FC<TVRemoteHandlerProps> = ({ children, onBackPress }) => {
   const navigation = useNavigation();
-  const tvEventHandlerRef = useRef<TVEventHandler | null>(null);
 
   // Check if we can go back in the navigation stack
   const canGoBack = useCallback(() => {
@@ -42,14 +47,11 @@ const TVRemoteHandler: React.FC<TVRemoteHandlerProps> = ({ children, onBackPress
   useEffect(() => {
     if (!Platform.isTV) return;
 
-    // Set up TV event handler
-    const enableTVEventHandler = () => {
-      tvEventHandlerRef.current = new TVEventHandler();
-      tvEventHandlerRef.current.enable(undefined, (cmp: any, evt: { eventType?: string; eventKeyAction?: number }) => {
+    // Listen for TV remote events via DeviceEventEmitter
+    const tvEventSubscription = DeviceEventEmitter.addListener(
+      'onTVRemoteKey',
+      (evt: TVEvent) => {
         if (!evt || !evt.eventType) return;
-
-        // Only respond to key up events to prevent double-firing
-        if (evt.eventKeyAction !== undefined && evt.eventKeyAction !== 1) return;
 
         const eventType = evt.eventType;
 
@@ -71,19 +73,21 @@ const TVRemoteHandler: React.FC<TVRemoteHandlerProps> = ({ children, onBackPress
             // Let these bubble up to the active component
             break;
         }
-      });
-    };
+      }
+    );
 
-    enableTVEventHandler();
+    return () => {
+      tvEventSubscription.remove();
+    };
+  }, [handleBackPress]);
+
+  useEffect(() => {
+    if (!Platform.isTV) return;
 
     // Handle hardware back button
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
 
     return () => {
-      if (tvEventHandlerRef.current) {
-        tvEventHandlerRef.current.disable();
-        tvEventHandlerRef.current = null;
-      }
       backHandler.remove();
     };
   }, [handleBackPress]);
@@ -92,3 +96,5 @@ const TVRemoteHandler: React.FC<TVRemoteHandlerProps> = ({ children, onBackPress
 };
 
 export default TVRemoteHandler;
+
+export { TVRemoteHandler };

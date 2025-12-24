@@ -21,7 +21,7 @@ import { useTVFocus } from '../../hooks/useTVNavigation';
 
 export interface TVFocusWrapperProps extends Omit<TouchableOpacityProps, 'style'> {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: ViewStyle | ViewStyle[];
   focusedStyle?: ViewStyle;
   onPress?: () => void;
   onLongPress?: () => void;
@@ -68,7 +68,7 @@ const TVFocusWrapper = forwardRef<TVFocusWrapperRef, TVFocusWrapperProps>(({
   const [isFocused, setIsFocused] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const opacityAnim = useRef(new Animated.Value(1)).current;
-  const touchableRef = useRef<TouchableOpacity>(null);
+  const touchableRef = useRef<View>(null);
 
   // Expose methods via ref
   useImperativeHandle(ref, () => ({

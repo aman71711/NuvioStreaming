@@ -19,6 +19,7 @@ import {
   ViewStyle,
   Platform,
   findNodeHandle,
+  View,
 } from 'react-native';
 import { isTV, tvDimensions } from '../../utils/tvPlatform';
 import { useTVFocus, FocusZone } from '../../contexts/TVFocusContext';
@@ -61,7 +62,7 @@ const TVTouchable: React.FC<TVTouchableProps> = ({
   accessibilityLabel,
   ...props
 }) => {
-  const touchableRef = useRef<TouchableOpacity>(null);
+  const touchableRef = useRef<View>(null);
   const [isFocused, setIsFocused] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const borderAnim = useRef(new Animated.Value(0)).current;

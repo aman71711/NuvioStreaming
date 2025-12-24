@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useCallback, useRef } from 'react';
-import { Platform, TVEventHandler, BackHandler } from 'react-native';
+import { Platform, BackHandler, DeviceEventEmitter } from 'react-native';
 import { isTV } from '../utils/tvPlatform';
 
 export type TVEventType = 
@@ -21,6 +21,12 @@ export type TVEventType =
   | 'menu'
   | 'back'
   | 'longSelect';
+
+interface TVEvent {
+  eventType: string;
+  eventKeyAction?: number;
+  tag?: number;
+}
 
 export interface TVNavigationHandlers {
   onUp?: () => void;
@@ -53,15 +59,13 @@ export const useTVNavigation = (
   useEffect(() => {
     if (!isTV || !enabled) return;
 
-    let tvEventHandler: TVEventHandler | null = null;
-
-    // Create TV event handler
-    const enableTVEventHandler = () => {
-      tvEventHandler = new TVEventHandler();
-      tvEventHandler.enable(undefined, (cmp: any, evt: { eventType?: string }) => {
+    // Listen for TV remote events via DeviceEventEmitter
+    const tvEventSubscription = DeviceEventEmitter.addListener(
+      'onTVRemoteKey',
+      (evt: TVEvent) => {
         if (!evt || !evt.eventType) return;
 
-        const eventType = evt.eventType as string;
+        const eventType = evt.eventType;
 
         switch (eventType) {
           case 'up':
@@ -101,10 +105,16 @@ export const useTVNavigation = (
             handlersRef.current.onLongSelect?.();
             break;
         }
-      });
-    };
+      }
+    );
 
-    enableTVEventHandler();
+    return () => {
+      tvEventSubscription.remove();
+    };
+  }, [enabled]);
+
+  useEffect(() => {
+    if (!isTV || !enabled) return;
 
     // Handle back button for TV
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -115,9 +125,6 @@ export const useTVNavigation = (
     });
 
     return () => {
-      if (tvEventHandler) {
-        tvEventHandler.disable();
-      }
       backHandler.remove();
     };
   }, [enabled]);

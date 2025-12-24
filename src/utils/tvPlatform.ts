@@ -3,7 +3,7 @@
  * Provides detection and utilities for Android TV support
  */
 
-import { Platform, Dimensions, TVEventHandler } from 'react-native';
+import { Platform, Dimensions } from 'react-native';
 
 // Detect if running on Android TV
 // Android TV devices typically have larger screens and no touch screen requirement

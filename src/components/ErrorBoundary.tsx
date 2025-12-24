@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 16,
-    color: colors.gray,
+    color: colors.textMuted,
     textAlign: 'center',
     marginBottom: 30,
     lineHeight: 24,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
   },
   errorStack: {
-    color: colors.gray,
+    color: colors.textMuted,
     fontSize: 10,
     fontFamily: 'monospace',
     marginTop: 10,
