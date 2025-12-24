@@ -139,14 +139,25 @@ class TVActivity : ReactActivity() {
     
     /**
      * Redirect to MainActivity for tablet/mobile experience
+     * This is a safe fallback that prevents crashes and black screens
      */
     private fun redirectToMainActivity() {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        // Pass any extras from the original intent
-        this.intent?.extras?.let { intent.putExtras(it) }
-        startActivity(intent)
-        finish()
+        try {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            // Pass any extras from the original intent
+            this.intent?.extras?.let { intent.putExtras(it) }
+            startActivity(intent)
+            finish()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error redirecting to MainActivity: ${e.message}", e)
+            // Last resort - try to just finish this activity
+            try {
+                finish()
+            } catch (e2: Exception) {
+                Log.e(TAG, "Critical error, cannot recover: ${e2.message}", e2)
+            }
+        }
     }
 
     /**

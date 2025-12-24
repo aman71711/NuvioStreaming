@@ -2,6 +2,7 @@ package com.nuvio.app
 
 import android.app.Application
 import android.content.res.Configuration
+import android.util.Log
 
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
@@ -18,14 +19,23 @@ import expo.modules.ReactNativeHostWrapper
 
 class MainApplication : Application(), ReactApplication {
 
+  companion object {
+    private const val TAG = "MainApplication"
+  }
+
   override val reactNativeHost: ReactNativeHost = ReactNativeHostWrapper(
       this,
       object : DefaultReactNativeHost(this) {
-        override fun getPackages(): List<ReactPackage> =
+        override fun getPackages(): List<ReactPackage> {
+          return try {
             PackageList(this).packages.apply {
-              // Packages that cannot be autolinked yet can be added manually here, for example:
-              // add(MyReactNativePackage())
+              // Packages that cannot be autolinked yet can be added manually here
             }
+          } catch (e: Exception) {
+            Log.e(TAG, "Error loading packages: ${e.message}", e)
+            emptyList()
+          }
+        }
 
           override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"
 
@@ -39,14 +49,36 @@ class MainApplication : Application(), ReactApplication {
     get() = ReactNativeHostWrapper.createReactHost(applicationContext, reactNativeHost)
 
   override fun onCreate() {
-    super.onCreate()
-    DefaultNewArchitectureEntryPoint.releaseLevel = try {
-      ReleaseLevel.valueOf(BuildConfig.REACT_NATIVE_RELEASE_LEVEL.uppercase())
-    } catch (e: IllegalArgumentException) {
-      ReleaseLevel.STABLE
+    try {
+      super.onCreate()
+      
+      // Set release level safely
+      DefaultNewArchitectureEntryPoint.releaseLevel = try {
+        ReleaseLevel.valueOf(BuildConfig.REACT_NATIVE_RELEASE_LEVEL.uppercase())
+      } catch (e: IllegalArgumentException) {
+        Log.w(TAG, "Invalid release level, defaulting to STABLE")
+        ReleaseLevel.STABLE
+      }
+      
+      // Load React Native
+      try {
+        loadReactNative(this)
+      } catch (e: Exception) {
+        Log.e(TAG, "Error loading React Native: ${e.message}", e)
+      }
+      
+      // Initialize Expo lifecycle
+      try {
+        ApplicationLifecycleDispatcher.onApplicationCreate(this)
+      } catch (e: Exception) {
+        Log.e(TAG, "Error in ApplicationLifecycleDispatcher: ${e.message}", e)
+      }
+      
+      Log.d(TAG, "Application initialized successfully")
+      
+    } catch (e: Exception) {
+      Log.e(TAG, "Critical error in onCreate: ${e.message}", e)
     }
-    loadReactNative(this)
-    ApplicationLifecycleDispatcher.onApplicationCreate(this)
   }
 
   override fun onConfigurationChanged(newConfig: Configuration) {
