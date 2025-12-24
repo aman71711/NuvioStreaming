@@ -186,6 +186,12 @@ android {
 }
 
 sentry {
+    // Disable ASM instrumentation to prevent packaging errors
+    // You can re-enable this later if needed
+    tracingInstrumentation {
+        enabled = false
+    }
+    
     // Enables or disables the automatic configuration of Native Symbols
     // for Sentry. This executes sentry-cli automatically so
     // you don't need to do it manually.

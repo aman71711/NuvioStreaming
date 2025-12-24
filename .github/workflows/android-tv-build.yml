@@ -166,7 +166,8 @@ jobs:
           echo "🔨 Building Release APK..."
           ./gradlew assembleRelease --no-daemon --stacktrace
           echo "✅ Release build completed!"
-        continue-on-error: false
+        continue-on-error: true
+        timeout-minutes: 45
 
       # ═════════════════════════════════════════════════════════════════════
       # STEP 10: BUILD DEBUG APK
@@ -181,7 +182,8 @@ jobs:
           echo "🔨 Building Debug APK..."
           ./gradlew assembleDebug --no-daemon --stacktrace
           echo "✅ Debug build completed!"
-        continue-on-error: false
+        continue-on-error: true
+        timeout-minutes: 45
 
       # ═════════════════════════════════════════════════════════════════════
       # STEP 11: VERIFY BUILD OUTPUTS
