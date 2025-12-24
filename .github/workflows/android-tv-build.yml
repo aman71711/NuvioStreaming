@@ -219,24 +219,33 @@ jobs:
 
       # 🧹 CLEANUP - Always run at the end (success or failure)
       # Clean up build artifacts and caches to free disk space for other workflows
+      # IMPORTANT: APKs are preserved for upload
       - name: Cleanup disk space
         if: always()
         run: |
           echo "=== Disk space before cleanup ==="
           df -h
           echo ""
-          echo "=== Cleaning up build artifacts and caches ==="
+          echo "=== Cleaning up build artifacts and caches (preserving APKs) ==="
           
-          # Clean Gradle cache and build outputs
+          # Clean Gradle cache and wrapper
           rm -rf ~/.gradle/caches || true
           rm -rf ~/.gradle/wrapper || true
+          
+          # Clean build intermediates BUT preserve APKs
+          # Only delete intermediate build files, not the final APK outputs
           rm -rf android/app/build/intermediates || true
-          rm -rf android/build || true
+          rm -rf android/app/build/generated || true
+          rm -rf android/app/build/tmp || true
+          rm -rf android/.gradle || true
+          
+          # DO NOT delete android/app/build/outputs/apk - APKs are here!
+          # DO NOT delete android/build - contains build metadata
           
           # Clean npm cache
           rm -rf ~/.npm || true
           
-          # Remove node_modules (will be cached anyway)
+          # Remove node_modules (cached by actions/setup-node anyway)
           rm -rf node_modules || true
           
           # Clean apt cache
@@ -245,8 +254,13 @@ jobs:
           # Remove Docker build cache (if any Docker operations happened)
           docker system prune -af || true
           
-          # Remove temporary files
-          sudo rm -rf /tmp/* || true
+          # Remove temporary files (excluding important system temps)
+          sudo rm -rf /tmp/npm-* || true
+          sudo rm -rf /tmp/yarn-* || true
+          
+          echo ""
+          echo "=== APKs are preserved in android/app/build/outputs/apk/ ==="
+          ls -lh android/app/build/outputs/apk/*/*.apk 2>/dev/null || echo "No APKs found (might have failed to build)"
           
           echo ""
           echo "=== Disk space after cleanup ==="
