@@ -33,56 +33,6 @@ jobs:
       contents: write
     
     steps:
-      # 🧹 FREE UP DISK SPACE - Prevent "No space left on device" error
-      # GitHub Actions runners have limited disk space (~14GB free)
-      # Android builds require significant space for Gradle caches and APKs
-      - name: Free up disk space
-        run: |
-          echo "=== Initial disk space ==="
-          df -h
-          echo ""
-          echo "=== Removing unnecessary files to free up space ==="
-          
-          # Remove .NET SDK (saves ~1.5GB)
-          sudo rm -rf /usr/share/dotnet || true
-          
-          # Remove Android SDK components we don't need (saves ~8GB)
-          sudo rm -rf /usr/local/lib/android/sdk/ndk || true
-          sudo rm -rf /usr/local/lib/android/sdk/build-tools/*/lib64 || true
-          
-          # Remove Haskell (saves ~5GB)
-          sudo rm -rf /opt/ghc || true
-          sudo rm -rf /usr/local/.ghcup || true
-          
-          # Remove Swift (saves ~1.5GB)
-          sudo rm -rf /usr/share/swift || true
-          
-          # Remove large tool caches
-          sudo rm -rf /opt/hostedtoolcache/CodeQL || true
-          sudo rm -rf /opt/hostedtoolcache/go || true
-          sudo rm -rf /opt/hostedtoolcache/node || true
-          
-          # Remove Docker images to free space (saves ~3GB)
-          docker system prune -af || true
-          
-          # Remove Azure CLI
-          sudo rm -rf /opt/az || true
-          sudo rm -rf /usr/share/az_* || true
-          
-          # Remove PowerShell
-          sudo rm -rf /usr/local/share/powershell || true
-          
-          # Remove Google Chrome
-          sudo rm -rf /usr/local/share/chromium || true
-          
-          # Clean apt cache
-          sudo apt-get clean || true
-          
-          echo ""
-          echo "=== Disk space after cleanup ==="
-          df -h
-        continue-on-error: true
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -266,3 +216,39 @@ jobs:
           draft: true
           prerelease: false
           generate_release_notes: true
+
+      # 🧹 CLEANUP - Always run at the end (success or failure)
+      # Clean up build artifacts and caches to free disk space for other workflows
+      - name: Cleanup disk space
+        if: always()
+        run: |
+          echo "=== Disk space before cleanup ==="
+          df -h
+          echo ""
+          echo "=== Cleaning up build artifacts and caches ==="
+          
+          # Clean Gradle cache and build outputs
+          rm -rf ~/.gradle/caches || true
+          rm -rf ~/.gradle/wrapper || true
+          rm -rf android/app/build/intermediates || true
+          rm -rf android/build || true
+          
+          # Clean npm cache
+          rm -rf ~/.npm || true
+          
+          # Remove node_modules (will be cached anyway)
+          rm -rf node_modules || true
+          
+          # Clean apt cache
+          sudo apt-get clean || true
+          
+          # Remove Docker build cache (if any Docker operations happened)
+          docker system prune -af || true
+          
+          # Remove temporary files
+          sudo rm -rf /tmp/* || true
+          
+          echo ""
+          echo "=== Disk space after cleanup ==="
+          df -h
+        continue-on-error: true
