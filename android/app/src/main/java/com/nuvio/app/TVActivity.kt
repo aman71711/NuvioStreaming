@@ -1,5 +1,11 @@
 package com.nuvio.app
 
+import android.app.UiModeManager
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 
@@ -14,13 +20,119 @@ import expo.modules.ReactActivityDelegateWrapper
  * Android TV Activity for Leanback Launcher
  * This activity is used when launching from Android TV's Leanback launcher
  * It handles TV-specific configurations and D-pad/remote navigation
+ * 
+ * IMPORTANT: This activity detects if we're on a REAL Android TV vs emulated
+ * environments like WSA (Windows Subsystem for Android) and redirects accordingly.
  */
 class TVActivity : ReactActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Set the TV theme BEFORE onCreate
+        // Check if this is a real Android TV device
+        // If not (e.g., WSA, emulator with leanback), redirect to MainActivity for tablet mode
+        if (!isRealAndroidTV()) {
+            redirectToMainActivity()
+            return
+        }
+        
+        // Set the TV theme BEFORE onCreate (only for real TV)
         setTheme(R.style.Theme_App_TV)
         super.onCreate(null)
+    }
+
+    /**
+     * Detects if this is a REAL Android TV device vs WSA/emulator
+     * WSA and some emulators have leanback features but should use tablet mode
+     */
+    private fun isRealAndroidTV(): Boolean {
+        // Check 1: Is this Windows Subsystem for Android (WSA)?
+        if (isWSA()) {
+            return false
+        }
+        
+        // Check 2: Is this a Chrome OS device (Chromebook)?
+        if (isChromeOS()) {
+            return false
+        }
+        
+        // Check 3: Is this running in an emulator that's not TV mode?
+        if (isNonTVEmulator()) {
+            return false
+        }
+        
+        // Check 4: Verify it's actually in TV UI mode
+        val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
+        val isTelevisionMode = uiModeManager.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
+        
+        // Check 5: Has real leanback feature AND is in TV mode
+        val hasLeanback = packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
+        
+        // Must be in TV mode AND have leanback to be a real TV
+        return isTelevisionMode && hasLeanback
+    }
+    
+    /**
+     * Detect Windows Subsystem for Android (WSA)
+     */
+    private fun isWSA(): Boolean {
+        val manufacturer = Build.MANUFACTURER?.lowercase() ?: ""
+        val model = Build.MODEL?.lowercase() ?: ""
+        val brand = Build.BRAND?.lowercase() ?: ""
+        val product = Build.PRODUCT?.lowercase() ?: ""
+        val device = Build.DEVICE?.lowercase() ?: ""
+        
+        // WSA detection patterns
+        return manufacturer.contains("microsoft") ||
+               model.contains("subsystem") ||
+               model.contains("windows") ||
+               brand.contains("microsoft") ||
+               product.contains("windows") ||
+               device.contains("windows") ||
+               // Additional WSA fingerprints
+               (manufacturer == "unknown" && model.contains("x86"))
+    }
+    
+    /**
+     * Detect Chrome OS / Chromebook devices
+     */
+    private fun isChromeOS(): Boolean {
+        return packageManager.hasSystemFeature("org.chromium.arc.device_management") ||
+               packageManager.hasSystemFeature("org.chromium.arc") ||
+               Build.DEVICE?.contains("cheets") == true
+    }
+    
+    /**
+     * Detect if running in a non-TV emulator
+     */
+    private fun isNonTVEmulator(): Boolean {
+        val isEmulator = Build.FINGERPRINT?.contains("generic") == true ||
+                         Build.FINGERPRINT?.contains("sdk") == true ||
+                         Build.MODEL?.contains("Emulator") == true ||
+                         Build.MODEL?.contains("Android SDK") == true ||
+                         Build.MANUFACTURER?.contains("Genymotion") == true ||
+                         Build.PRODUCT?.contains("sdk") == true ||
+                         Build.HARDWARE?.contains("goldfish") == true ||
+                         Build.HARDWARE?.contains("ranchu") == true
+        
+        if (!isEmulator) return false
+        
+        // If it's an emulator, check if it's specifically a TV emulator
+        val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
+        val isTelevisionMode = uiModeManager.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
+        
+        // Non-TV emulator = emulator that's NOT in TV mode
+        return !isTelevisionMode
+    }
+    
+    /**
+     * Redirect to MainActivity for tablet/mobile experience
+     */
+    private fun redirectToMainActivity() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        // Pass any extras from the original intent
+        this.intent?.extras?.let { intent.putExtras(it) }
+        startActivity(intent)
+        finish()
     }
 
     /**
