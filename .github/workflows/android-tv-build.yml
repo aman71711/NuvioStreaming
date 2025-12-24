@@ -33,6 +33,56 @@ jobs:
       contents: write
     
     steps:
+      # 🧹 FREE UP DISK SPACE - Prevent "No space left on device" error
+      # GitHub Actions runners have limited disk space (~14GB free)
+      # Android builds require significant space for Gradle caches and APKs
+      - name: Free up disk space
+        run: |
+          echo "=== Initial disk space ==="
+          df -h
+          echo ""
+          echo "=== Removing unnecessary files to free up space ==="
+          
+          # Remove .NET SDK (saves ~1.5GB)
+          sudo rm -rf /usr/share/dotnet || true
+          
+          # Remove Android SDK components we don't need (saves ~8GB)
+          sudo rm -rf /usr/local/lib/android/sdk/ndk || true
+          sudo rm -rf /usr/local/lib/android/sdk/build-tools/*/lib64 || true
+          
+          # Remove Haskell (saves ~5GB)
+          sudo rm -rf /opt/ghc || true
+          sudo rm -rf /usr/local/.ghcup || true
+          
+          # Remove Swift (saves ~1.5GB)
+          sudo rm -rf /usr/share/swift || true
+          
+          # Remove large tool caches
+          sudo rm -rf /opt/hostedtoolcache/CodeQL || true
+          sudo rm -rf /opt/hostedtoolcache/go || true
+          sudo rm -rf /opt/hostedtoolcache/node || true
+          
+          # Remove Docker images to free space (saves ~3GB)
+          docker system prune -af || true
+          
+          # Remove Azure CLI
+          sudo rm -rf /opt/az || true
+          sudo rm -rf /usr/share/az_* || true
+          
+          # Remove PowerShell
+          sudo rm -rf /usr/local/share/powershell || true
+          
+          # Remove Google Chrome
+          sudo rm -rf /usr/local/share/chromium || true
+          
+          # Clean apt cache
+          sudo apt-get clean || true
+          
+          echo ""
+          echo "=== Disk space after cleanup ==="
+          df -h
+        continue-on-error: true
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -77,6 +127,18 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
+      # Check disk space before building
+      - name: Check available disk space
+        run: |
+          echo "=== Disk space before build ==="
+          df -h
+          FREE_SPACE=$(df -BG / | tail -1 | awk '{print $4}' | sed 's/G//')
+          echo "Free space: ${FREE_SPACE}GB"
+          if [ "$FREE_SPACE" -lt 5 ]; then
+            echo "WARNING: Less than 5GB free space available!"
+            echo "Build may fail due to insufficient disk space."
+          fi
+
       # Create debug keystore for signing (required for release builds using debug signing)
       - name: Create Debug Keystore
         run: |
@@ -95,7 +157,18 @@ jobs:
         run: |
           ./gradlew assembleRelease --no-daemon --stacktrace --build-cache
         env:
-          GRADLE_OPTS: '-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false -Dorg.gradle.caching=true'
+          GRADLE_OPTS: '-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=512m -Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Dorg.gradle.parallel=true'
+
+      # Clean up Gradle cache after build to free space for artifact upload
+      - name: Clean up build cache
+        if: always()
+        run: |
+          # Remove intermediate build files to save space
+          rm -rf android/.gradle/build-cache || true
+          rm -rf android/app/build/intermediates || true
+          rm -rf android/app/build/tmp || true
+          # Show remaining space
+          df -h
 
       # 🚀 EARLY UPLOAD - Get your Release APK immediately after build!
       - name: Upload Release APK (EARLY - Available Now!)
@@ -112,7 +185,7 @@ jobs:
         run: |
           ./gradlew assembleDebug --no-daemon --stacktrace --build-cache
         env:
-          GRADLE_OPTS: '-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false -Dorg.gradle.caching=true'
+          GRADLE_OPTS: '-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=512m -Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Dorg.gradle.parallel=true'
 
       - name: List APK files
         run: |
