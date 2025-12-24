@@ -10,6 +10,8 @@ import {
   StatusBar,
   Switch,
 } from 'react-native';
+
+const isTVDevice = Platform.isTV || false;
 import { useNavigation } from '@react-navigation/native';
 import { useSettings, AppSettings } from '../hooks/useSettings';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -165,6 +167,10 @@ const PlayerSettingsScreen: React.FC = () => {
           onPress={handleBack}
           style={styles.backButton}
           activeOpacity={0.7}
+          hasTVPreferredFocus={isTVDevice}
+          accessible={true}
+          accessibilityLabel="Back to Settings"
+          accessibilityRole="button"
         >
           <MaterialIcons
             name="arrow-back"

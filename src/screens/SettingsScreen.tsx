@@ -541,6 +541,7 @@ const SettingsScreen: React.FC = () => {
               onPress={() => navigation.navigate('TraktSettings')}
               isLast={true}
               isTablet={isTablet}
+              hasTVPreferredFocus={isTVDevice}
             />
           </SettingsCard>
         );

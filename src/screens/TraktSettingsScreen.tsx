@@ -12,6 +12,8 @@ import {
   Linking,
   Switch,
 } from 'react-native';
+
+const isTVDevice = Platform.isTV || false;
 import { useNavigation } from '@react-navigation/native';
 import { makeRedirectUri, useAuthRequest, ResponseType, Prompt, CodeChallengeMethod } from 'expo-auth-session';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -223,6 +225,10 @@ const TraktSettingsScreen: React.FC = () => {
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
+          hasTVPreferredFocus={isTVDevice}
+          accessible={true}
+          accessibilityLabel="Back to Settings"
+          accessibilityRole="button"
         >
           <MaterialIcons 
             name="arrow-back" 

@@ -940,6 +940,9 @@ const SearchScreen = () => {
                 returnKeyType="search"
                 keyboardAppearance="dark"
                 ref={inputRef}
+                accessible={true}
+                accessibilityLabel="Search for movies and shows"
+                accessibilityHint="Enter a title to search"
               />
               {query.length > 0 && (
                 <TouchableOpacity

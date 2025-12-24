@@ -14,6 +14,8 @@ import {
   SafeAreaView,
   BackHandler,
 } from 'react-native';
+
+const isTVDevice = Platform.isTV || false;
 import { useNavigation } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -538,6 +540,10 @@ const ThemeScreen: React.FC = () => {
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
+          hasTVPreferredFocus={isTVDevice}
+          accessible={true}
+          accessibilityLabel="Back to Settings"
+          accessibilityRole="button"
         >
           <MaterialIcons name="arrow-back" size={24} color={currentTheme.colors.text} />
           <Text style={[styles.backText, { color: currentTheme.colors.text }]}>
