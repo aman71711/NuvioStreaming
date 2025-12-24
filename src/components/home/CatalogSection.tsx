@@ -8,9 +8,11 @@ import { useTheme } from '../../contexts/ThemeContext';
 import ContentItem from './ContentItem';
 import Animated, { FadeIn, Layout } from 'react-native-reanimated';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { isTV as isTVDevice } from '../../utils/tvPlatform';
 
 interface CatalogSectionProps {
   catalog: CatalogContent;
+  isFirstCatalog?: boolean; // For TV focus - first catalog gets initial focus
 }
 
 const { width } = Dimensions.get('window');
@@ -72,7 +74,7 @@ const calculatePosterLayout = (screenWidth: number) => {
 const posterLayout = calculatePosterLayout(width);
 const POSTER_WIDTH = posterLayout.posterWidth;
 
-const CatalogSection = ({ catalog }: CatalogSectionProps) => {
+const CatalogSection = ({ catalog, isFirstCatalog = false }: CatalogSectionProps) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { currentTheme } = useTheme();
 
@@ -80,14 +82,17 @@ const CatalogSection = ({ catalog }: CatalogSectionProps) => {
     navigation.navigate('Metadata', { id, type, addonId: catalog.addon });
   }, [navigation, catalog.addon]);
 
-  const renderContentItem = useCallback(({ item }: { item: StreamingContent, index: number }) => {
+  const renderContentItem = useCallback(({ item, index }: { item: StreamingContent, index: number }) => {
+    // First item in the first catalog gets TV preferred focus
+    const shouldHaveTVPreferredFocus = isTVDevice && isFirstCatalog && index === 0;
     return (
       <ContentItem
         item={item}
         onPress={handleContentPress}
+        hasTVPreferredFocus={shouldHaveTVPreferredFocus}
       />
     );
-  }, [handleContentPress]);
+  }, [handleContentPress, isFirstCatalog]);
 
   // Memoize the ItemSeparatorComponent to prevent re-creation (responsive spacing)
   const separatorWidth = isTV ? 12 : isLargeTablet ? 10 : isTablet ? 8 : 8;

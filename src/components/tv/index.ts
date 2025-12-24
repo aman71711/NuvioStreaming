@@ -14,3 +14,8 @@ export type { TVContentRowProps, ContentItem } from './TVContentRow';
 
 export { default as TVTouchable } from './TVTouchable';
 export type { TVTouchableProps } from './TVTouchable';
+
+export { default as TVRemoteHandler } from './TVRemoteHandler';
+
+export { withTVFocus, TVTouchableOpacity } from './withTVFocus';
+export type { TVFocusConfig, WithTVFocusProps } from './withTVFocus';

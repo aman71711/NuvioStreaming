@@ -112,6 +112,7 @@ interface SettingItemProps {
   onPress?: () => void;
   badge?: string | number;
   isTablet?: boolean;
+  hasTVPreferredFocus?: boolean;
 }
 
 const SettingItem: React.FC<SettingItemProps> = ({
@@ -123,7 +124,8 @@ const SettingItem: React.FC<SettingItemProps> = ({
   isLast = false,
   onPress,
   badge,
-  isTablet = false
+  isTablet = false,
+  hasTVPreferredFocus = false
 }) => {
   const { currentTheme } = useTheme();
 
@@ -140,6 +142,7 @@ const SettingItem: React.FC<SettingItemProps> = ({
       accessible={true}
       accessibilityLabel={`${title}${description ? `, ${description}` : ''}`}
       accessibilityRole="button"
+      hasTVPreferredFocus={hasTVPreferredFocus}
     >
       <View style={[
         styles.settingIconContainer,

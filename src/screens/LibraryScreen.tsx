@@ -93,13 +93,15 @@ const TraktItem = React.memo(({
   width,
   navigation,
   currentTheme,
-  showTitles
+  showTitles,
+  index = 0
 }: {
   item: TraktDisplayItem;
   width: number;
   navigation: any;
   currentTheme: any;
   showTitles: boolean;
+  index?: number;
 }) => {
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
 
@@ -132,6 +134,7 @@ const TraktItem = React.memo(({
       accessibilityLabel={`${item.name}. ${item.type === 'movie' ? 'Movie' : 'Series'}`}
       accessibilityRole="button"
       accessibilityHint="Double tap to view details"
+      hasTVPreferredFocus={isTVDevice && index === 0}
     >
       <View>
         <View style={[styles.posterContainer, { shadowColor: currentTheme.colors.black }]}>
@@ -511,13 +514,14 @@ const LibraryScreen = () => {
     </TouchableOpacity>
   );
 
-  const renderTraktItem = useCallback(({ item }: { item: TraktDisplayItem }) => {
+  const renderTraktItem = useCallback(({ item, index }: { item: TraktDisplayItem; index?: number }) => {
     return <TraktItem
       item={item}
       width={itemWidth}
       navigation={navigation}
       currentTheme={currentTheme}
       showTitles={settings.showPosterTitles}
+      index={index}
     />;
   }, [itemWidth, navigation, currentTheme, settings.showPosterTitles]);
 
@@ -794,7 +798,7 @@ const LibraryScreen = () => {
     return (
       <FlashList
         data={folderItems}
-        renderItem={({ item }) => renderTraktItem({ item })}
+        renderItem={({ item, index }) => renderTraktItem({ item, index })}
         keyExtractor={(item) => `${item.type}-${item.id}`}
         numColumns={numColumns}
         style={styles.traktContainer}

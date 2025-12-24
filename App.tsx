@@ -29,6 +29,9 @@ import { TraktProvider } from './src/contexts/TraktContext';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import { TrailerProvider } from './src/contexts/TrailerContext';
 import { DownloadsProvider } from './src/contexts/DownloadsContext';
+import { TVFocusProvider } from './src/contexts/TVFocusContext';
+import { TVRemoteHandler } from './src/components/tv/TVRemoteHandler';
+import { isTV } from './src/utils/tvPlatform';
 import SplashScreen from './src/components/SplashScreen';
 import UpdatePopup from './src/components/UpdatePopup';
 import MajorUpdateOverlay from './src/components/MajorUpdateOverlay';
@@ -205,7 +208,8 @@ const ThemedApp = () => {
           linking={undefined}
         >
           <DownloadsProvider>
-            <View style={[styles.container, { backgroundColor: currentTheme.colors.darkBackground }]}>
+            <TVRemoteHandler>
+              <View style={[styles.container, { backgroundColor: currentTheme.colors.darkBackground }]}>
               <StatusBar style="light" />
               {!isAppReady && <SplashScreen onFinish={handleSplashComplete} />}
               {shouldShowApp && <AppNavigator initialRouteName={initialRouteName} />}
@@ -232,7 +236,8 @@ const ThemedApp = () => {
                 onActionPress={handleNavigateToDebrid}
                 actionButtonText="Connect Now"
               />
-            </View>
+              </View>
+            </TVRemoteHandler>
           </DownloadsProvider>
         </NavigationContainer>
       </PaperProvider>
@@ -243,19 +248,21 @@ const ThemedApp = () => {
 function App(): React.JSX.Element {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <GenreProvider>
-        <CatalogProvider>
-          <TraktProvider>
-            <ThemeProvider>
-              <TrailerProvider>
-                <ToastProvider>
-                  <ThemedApp />
-                </ToastProvider>
-              </TrailerProvider>
-            </ThemeProvider>
-          </TraktProvider>
-        </CatalogProvider>
-      </GenreProvider>
+      <TVFocusProvider>
+        <GenreProvider>
+          <CatalogProvider>
+            <TraktProvider>
+              <ThemeProvider>
+                <TrailerProvider>
+                  <ToastProvider>
+                    <ThemedApp />
+                  </ToastProvider>
+                </TrailerProvider>
+              </ThemeProvider>
+            </TraktProvider>
+          </CatalogProvider>
+        </GenreProvider>
+      </TVFocusProvider>
     </GestureHandlerRootView>
   );
 }

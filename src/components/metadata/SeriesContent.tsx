@@ -963,7 +963,7 @@ const SeriesContentComponent: React.FC<SeriesContentProps> = ({
   };
 
   // Vertical layout episode card (traditional)
-  const renderVerticalEpisodeCard = (episode: Episode) => {
+  const renderVerticalEpisodeCard = (episode: Episode, index: number = 0) => {
     // Resolve episode image with addon-first logic
     const resolveEpisodeImage = (): string => {
       const candidates: Array<string | undefined | null> = [
@@ -1056,6 +1056,7 @@ const SeriesContentComponent: React.FC<SeriesContentProps> = ({
         accessibilityLabel={`Episode ${episode.episode_number}: ${episode.name}`}
         accessibilityRole="button"
         accessibilityHint="Double tap to play this episode"
+        hasTVPreferredFocus={isTVDevice && index === 0}
       >
         <View style={[
           styles.episodeImageContainer,
@@ -1657,7 +1658,7 @@ const SeriesContentComponent: React.FC<SeriesContentProps> = ({
                 <Animated.View
                   entering={enableItemAnimations ? FadeIn.duration(300).delay(100 + index * 30) : undefined as any}
                 >
-                  {renderVerticalEpisodeCard(episode)}
+                  {renderVerticalEpisodeCard(episode, index)}
                 </Animated.View>
               )}
               keyExtractor={episode => episode.id.toString()}

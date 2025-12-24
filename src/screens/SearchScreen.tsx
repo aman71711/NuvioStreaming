@@ -670,6 +670,7 @@ const SearchScreen = () => {
         accessibilityLabel={`${item.name || item.id}. ${item.type === 'movie' ? 'Movie' : 'Series'}`}
         accessibilityRole="button"
         accessibilityHint="Double tap to view details"
+        hasTVPreferredFocus={isTVDevice && index === 0}
       >
         <View style={[styles.horizontalItemPosterContainer, {
           width: itemWidth,

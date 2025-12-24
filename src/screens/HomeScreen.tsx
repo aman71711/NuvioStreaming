@@ -91,7 +91,7 @@ type HomeScreenListItem =
   | { type: 'featured'; key: string }
   | { type: 'thisWeek'; key: string }
   | { type: 'continueWatching'; key: string }
-  | { type: 'catalog'; catalog: CatalogContent; key: string }
+  | { type: 'catalog'; catalog: CatalogContent; key: string; isFirstCatalog?: boolean }
   | { type: 'placeholder'; key: string }
   | { type: 'welcome'; key: string }
   | { type: 'loadMore'; key: string };
@@ -657,7 +657,12 @@ const HomeScreen = () => {
 
     catalogsToShow.forEach((catalog, index) => {
       if (catalog) {
-        data.push({ type: 'catalog', catalog, key: `${catalog.addon}-${catalog.id}-${index}` });
+        data.push({ 
+          type: 'catalog', 
+          catalog, 
+          key: `${catalog.addon}-${catalog.id}-${index}`,
+          isFirstCatalog: index === 0 // First catalog for TV focus
+        });
       } else {
         // Add a key for placeholders
         data.push({ type: 'placeholder', key: `placeholder-${index}` });
@@ -761,7 +766,7 @@ const HomeScreen = () => {
       case 'continueWatching':
         return null; // Moved to ListHeaderComponent to avoid remounts on scroll
       case 'catalog':
-        return <CatalogSection catalog={item.catalog} />;
+        return <CatalogSection catalog={item.catalog} isFirstCatalog={item.isFirstCatalog} />;
       case 'placeholder':
         return (
           <Animated.View>

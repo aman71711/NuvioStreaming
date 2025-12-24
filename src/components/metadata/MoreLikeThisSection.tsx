@@ -127,6 +127,7 @@ export const MoreLikeThisSection: React.FC<MoreLikeThisSectionProps> = ({
       accessibilityLabel={`${item.name}. ${item.type === 'movie' ? 'Movie' : 'Series'}`}
       accessibilityRole="button"
       accessibilityHint="Double tap to view details"
+      hasTVPreferredFocus={isTVDevice && index === 0}
     >
       <FastImage
         source={{ uri: item.poster }}
