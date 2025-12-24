@@ -102,7 +102,19 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
 export const useAccount = (): AccountContextValue => {
   const ctx = useContext(AccountContext);
-  if (!ctx) throw new Error('useAccount must be used within AccountProvider');
+  // Return default value instead of throwing to prevent crashes
+  if (!ctx) {
+    console.warn('useAccount used outside AccountProvider, returning defaults');
+    return {
+      user: null,
+      loading: false,
+      signIn: async () => 'Not initialized',
+      signUp: async () => 'Not initialized',
+      signOut: async () => {},
+      refreshCurrentUser: async () => {},
+      updateProfile: async () => 'Not initialized',
+    };
+  }
   return ctx;
 };
 

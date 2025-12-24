@@ -11,7 +11,8 @@ import {
   StyleSheet,
   I18nManager,
   Platform,
-  LogBox
+  LogBox,
+  Text
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -33,6 +34,7 @@ import { TVFocusProvider } from './src/contexts/TVFocusContext';
 import { TVRemoteHandler } from './src/components/tv/TVRemoteHandler';
 import { isTV } from './src/utils/tvPlatform';
 import SplashScreen from './src/components/SplashScreen';
+import ErrorBoundary from './src/components/ErrorBoundary';
 import UpdatePopup from './src/components/UpdatePopup';
 import MajorUpdateOverlay from './src/components/MajorUpdateOverlay';
 import { useGithubMajorUpdate } from './src/hooks/useGithubMajorUpdate';
@@ -46,21 +48,26 @@ import { ToastProvider } from './src/contexts/ToastContext';
 import { mmkvStorage } from './src/services/mmkvStorage';
 import AnnouncementOverlay from './src/components/AnnouncementOverlay';
 
-Sentry.init({
-  dsn: 'https://1a58bf436454d346e5852b7bfd3c95e8@o4509536317276160.ingest.de.sentry.io/4509536317734992',
+// Initialize Sentry with error handling
+try {
+  Sentry.init({
+    dsn: 'https://1a58bf436454d346e5852b7bfd3c95e8@o4509536317276160.ingest.de.sentry.io/4509536317734992',
 
-  // Adds more context data to events (IP address, cookies, user, etc.)
-  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
-  sendDefaultPii: true,
+    // Adds more context data to events (IP address, cookies, user, etc.)
+    // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+    sendDefaultPii: true,
 
-  // Configure Session Replay conservatively to avoid startup overhead in production
-  replaysSessionSampleRate: __DEV__ ? 0.1 : 0,
-  replaysOnErrorSampleRate: __DEV__ ? 1 : 0,
-  integrations: [Sentry.feedbackIntegration()],
+    // Configure Session Replay conservatively to avoid startup overhead in production
+    replaysSessionSampleRate: __DEV__ ? 0.1 : 0,
+    replaysOnErrorSampleRate: __DEV__ ? 1 : 0,
+    integrations: [Sentry.feedbackIntegration()],
 
-  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
-  // spotlight: __DEV__,
-});
+    // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+    // spotlight: __DEV__,
+  });
+} catch (e) {
+  console.warn('Sentry initialization failed:', e);
+}
 
 // Force LTR layout to prevent RTL issues when Arabic is set as system language
 // This ensures posters and UI elements remain visible and properly positioned
@@ -92,6 +99,24 @@ const ThemedApp = () => {
   const [isAppReady, setIsAppReady] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean | null>(null);
   const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+  const [initTimeout, setInitTimeout] = useState(false);
+
+  // Safety timeout - if app doesn't initialize within 15 seconds, show error recovery
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!isAppReady) {
+        console.warn('App initialization timeout - forcing ready state');
+        setInitTimeout(true);
+        setIsAppReady(true);
+        if (hasCompletedOnboarding === null) {
+          setHasCompletedOnboarding(false); // Default to onboarding
+        }
+      }
+    }, 15000); // 15 second timeout
+
+    return () => clearTimeout(timeout);
+  }, [isAppReady, hasCompletedOnboarding]);
 
   // Update popup functionality
   const {
@@ -124,28 +149,45 @@ const ThemedApp = () => {
         const onboardingCompleted = await mmkvStorage.getItem('hasCompletedOnboarding');
         setHasCompletedOnboarding(onboardingCompleted === 'true');
 
-        // Initialize update service
-        await UpdateService.initialize();
+        // Initialize update service (non-critical, wrap in try-catch)
+        try {
+          await UpdateService.initialize();
+        } catch (e) {
+          console.warn('UpdateService initialization failed:', e);
+        }
 
-        // Initialize memory monitoring service to prevent OutOfMemoryError
-        memoryMonitorService; // Just accessing it starts the monitoring
-        console.log('Memory monitoring service initialized');
+        // Initialize memory monitoring service to prevent OutOfMemoryError (non-critical)
+        try {
+          memoryMonitorService; // Just accessing it starts the monitoring
+          console.log('Memory monitoring service initialized');
+        } catch (e) {
+          console.warn('Memory monitoring service failed:', e);
+        }
 
-        // Initialize AI service
-        await aiService.initialize();
-        console.log('AI service initialized');
+        // Initialize AI service (non-critical)
+        try {
+          await aiService.initialize();
+          console.log('AI service initialized');
+        } catch (e) {
+          console.warn('AI service initialization failed:', e);
+        }
 
         // Check if announcement should be shown (version 1.0.0)
-        const announcementShown = await mmkvStorage.getItem('announcement_v1.0.0_shown');
-        if (!announcementShown && onboardingCompleted === 'true') {
-          // Show announcement only after app is ready
-          setTimeout(() => {
-            setShowAnnouncement(true);
-          }, 1000);
+        try {
+          const announcementShown = await mmkvStorage.getItem('announcement_v1.0.0_shown');
+          if (!announcementShown && onboardingCompleted === 'true') {
+            // Show announcement only after app is ready
+            setTimeout(() => {
+              setShowAnnouncement(true);
+            }, 1000);
+          }
+        } catch (e) {
+          console.warn('Announcement check failed:', e);
         }
 
       } catch (error) {
         console.error('Error initializing app:', error);
+        setInitError(String(error));
         // Default to showing onboarding if we can't check
         setHasCompletedOnboarding(false);
       }
@@ -247,10 +289,11 @@ const ThemedApp = () => {
 
 function App(): React.JSX.Element {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <TVFocusProvider>
-        <GenreProvider>
-          <CatalogProvider>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <TVFocusProvider>
+          <GenreProvider>
+            <CatalogProvider>
             <TraktProvider>
               <ThemeProvider>
                 <TrailerProvider>
@@ -264,6 +307,7 @@ function App(): React.JSX.Element {
         </GenreProvider>
       </TVFocusProvider>
     </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 
@@ -273,4 +317,13 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Sentry.wrap(App);
+// Wrap with Sentry for crash reporting, with fallback if Sentry fails
+let WrappedApp;
+try {
+  WrappedApp = Sentry.wrap(App);
+} catch (e) {
+  console.warn('Sentry.wrap failed, using unwrapped App:', e);
+  WrappedApp = App;
+}
+
+export default WrappedApp;

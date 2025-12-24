@@ -5,7 +5,12 @@ interface LoadingContextValue {
   setHomeLoading: (loading: boolean) => void;
 }
 
-const LoadingContext = createContext<LoadingContextValue | undefined>(undefined);
+const defaultValue: LoadingContextValue = {
+  isHomeLoading: true,
+  setHomeLoading: () => {},
+};
+
+const LoadingContext = createContext<LoadingContextValue>(defaultValue);
 
 export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isHomeLoading, setIsHomeLoading] = useState(true);
@@ -24,8 +29,10 @@ export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children })
 
 export const useLoading = (): LoadingContextValue => {
   const context = useContext(LoadingContext);
+  // Return default value instead of throwing - prevents crashes
   if (!context) {
-    throw new Error('useLoading must be used within a LoadingProvider');
+    console.warn('useLoading used outside LoadingProvider, using defaults');
+    return defaultValue;
   }
   return context;
 };
