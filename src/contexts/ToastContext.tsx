@@ -24,10 +24,30 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
+// Default no-op values for when context is used outside provider
+const defaultToastContext: ToastContextType = {
+  showSuccess: () => '',
+  showError: () => '',
+  showWarning: () => '',
+  showInfo: () => '',
+  showCustom: () => '',
+  removeToast: () => {},
+  removeAllToasts: () => {},
+  showSaved: () => '',
+  showRemoved: () => '',
+  showTraktSaved: () => '',
+  showTraktRemoved: () => '',
+  showNetworkError: () => '',
+  showAuthError: () => '',
+  showSyncSuccess: () => '',
+  showProgressSaved: () => '',
+};
+
 export const useToast = (): ToastContextType => {
   const context = useContext(ToastContext);
   if (!context) {
-    throw new Error('useToast must be used within a ToastProvider');
+    console.warn('useToast used outside ToastProvider, returning defaults');
+    return defaultToastContext;
   }
   return context;
 };

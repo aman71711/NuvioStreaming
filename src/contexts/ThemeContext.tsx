@@ -337,10 +337,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 }
 
 // Custom hook to use the theme context
+// Default theme for when context is used outside provider
+const defaultThemeContext: ThemeContextProps = {
+  currentTheme: DEFAULT_THEMES[0],
+  availableThemes: DEFAULT_THEMES,
+  setCurrentTheme: () => {},
+  addCustomTheme: () => {},
+  updateCustomTheme: () => {},
+  deleteCustomTheme: () => {},
+};
+
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    console.warn('useTheme used outside ThemeProvider, returning defaults');
+    return defaultThemeContext;
   }
   return context;
 } 

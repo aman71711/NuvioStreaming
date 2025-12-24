@@ -51,10 +51,41 @@ export function TraktProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Default values for when context is used outside provider
+const defaultTraktContext: TraktContextProps = {
+  isAuthenticated: false,
+  isLoading: false,
+  userProfile: null,
+  watchedMovies: [],
+  watchedShows: [],
+  watchlistMovies: [],
+  watchlistShows: [],
+  collectionMovies: [],
+  collectionShows: [],
+  continueWatching: [],
+  ratedContent: [],
+  checkAuthStatus: async () => {},
+  refreshAuthStatus: async () => {},
+  loadWatchedItems: async () => {},
+  loadAllCollections: async () => {},
+  isMovieWatched: async () => false,
+  isEpisodeWatched: async () => false,
+  markMovieAsWatched: async () => false,
+  markEpisodeAsWatched: async () => false,
+  forceSyncTraktProgress: async () => false,
+  addToWatchlist: async () => false,
+  removeFromWatchlist: async () => false,
+  addToCollection: async () => false,
+  removeFromCollection: async () => false,
+  isInWatchlist: () => false,
+  isInCollection: () => false,
+};
+
 export function useTraktContext() {
   const context = useContext(TraktContext);
   if (context === undefined) {
-    throw new Error('useTraktContext must be used within a TraktProvider');
+    console.warn('useTraktContext used outside TraktProvider, returning defaults');
+    return defaultTraktContext;
   }
   return context;
 } 

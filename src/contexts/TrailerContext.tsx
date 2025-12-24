@@ -38,10 +38,19 @@ export const TrailerProvider: React.FC<{ children: ReactNode }> = ({ children })
   );
 };
 
+// Default values for when context is used outside provider
+const defaultTrailerContext: TrailerContextValue = {
+  isTrailerPlaying: false,
+  pauseTrailer: () => {},
+  resumeTrailer: () => {},
+  setTrailerPlaying: () => {},
+};
+
 export const useTrailer = (): TrailerContextValue => {
   const context = useContext(TrailerContext);
   if (!context) {
-    throw new Error('useTrailer must be used within a TrailerProvider');
+    console.warn('useTrailer used outside TrailerProvider, returning defaults');
+    return defaultTrailerContext;
   }
   return context;
 };

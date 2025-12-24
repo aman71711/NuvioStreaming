@@ -732,9 +732,23 @@ export const DownloadsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 };
 
+// Default values for when context is used outside provider
+const defaultDownloadsContext: DownloadsContextValue = {
+  downloads: [],
+  startDownload: async () => {},
+  pauseDownload: async () => {},
+  resumeDownload: async () => {},
+  cancelDownload: async () => {},
+  removeDownload: async () => {},
+  isDownloadingUrl: () => false,
+};
+
 export function useDownloads(): DownloadsContextValue {
   const ctx = useContext(DownloadsContext);
-  if (!ctx) throw new Error('useDownloads must be used within DownloadsProvider');
+  if (!ctx) {
+    console.warn('useDownloads used outside DownloadsProvider, returning defaults');
+    return defaultDownloadsContext;
+  }
   return ctx;
 }
 
