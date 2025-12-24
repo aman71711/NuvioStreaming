@@ -18,6 +18,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView as ExpoBlurView } from 'expo-blur';
 import { BlurView as CommunityBlurView } from '@react-native-community/blur';
 
+// TV Platform utilities for focus handling
+import { isTV as isTVDevice, tvDimensions } from '../../utils/tvPlatform';
+
 // Optional iOS Glass effect (expo-glass-effect) with safe fallback for HeroSection
 let GlassViewComp: any = null;
 let liquidGlassAvailable = false;
@@ -351,7 +354,11 @@ const ActionButtons = memo(({
               additionalButtonCount === 0 ? styles.singleRowPlayButtonFullWidth : styles.primaryActionButton
             ]}
             onPress={handleShowStreams}
-            activeOpacity={0.85}
+            activeOpacity={isTVDevice ? 1 : 0.85}
+            hasTVPreferredFocus={isTVDevice}
+            accessible={true}
+            accessibilityLabel={`${finalPlayButtonText} ${type}`}
+            accessibilityRole="button"
           >
             <MaterialIcons 
               name={(() => {
@@ -374,7 +381,10 @@ const ActionButtons = memo(({
               additionalButtonCount === 0 ? styles.singleRowSaveButtonFullWidth : styles.primaryActionButton
             ]}
             onPress={handleSaveAction}
-            activeOpacity={0.85}
+            activeOpacity={isTVDevice ? 1 : 0.85}
+            accessible={true}
+            accessibilityLabel={inLibrary ? 'Remove from library' : 'Save to library'}
+            accessibilityRole="button"
           >
             {Platform.OS === 'ios' ? (
               GlassViewComp && liquidGlassAvailable ? (
@@ -403,7 +413,10 @@ const ActionButtons = memo(({
             <TouchableOpacity
               style={[styles.iconButton, isTablet && styles.tabletIconButton, styles.singleRowIconButton]}
               onPress={handleCollectionAction}
-              activeOpacity={0.85}
+              activeOpacity={isTVDevice ? 1 : 0.85}
+              accessible={true}
+              accessibilityLabel={isInCollection ? 'Remove from Trakt collection' : 'Add to Trakt collection'}
+              accessibilityRole="button"
             >
               {Platform.OS === 'ios' ? (
                 GlassViewComp && liquidGlassAvailable ? (
@@ -430,7 +443,10 @@ const ActionButtons = memo(({
             <TouchableOpacity
               style={[styles.iconButton, isTablet && styles.tabletIconButton, styles.singleRowIconButton]}
               onPress={handleRatingsPress}
-              activeOpacity={0.85}
+              activeOpacity={isTVDevice ? 1 : 0.85}
+              accessible={true}
+              accessibilityLabel="View episode ratings"
+              accessibilityRole="button"
             >
               {Platform.OS === 'ios' ? (
                 GlassViewComp && liquidGlassAvailable ? (

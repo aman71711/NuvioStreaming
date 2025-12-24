@@ -13,6 +13,7 @@ import Animated, {
   FadeIn,
 } from 'react-native-reanimated';
 import { useTheme } from '../../contexts/ThemeContext';
+import { isTV as isTVDevice } from '../../utils/tvPlatform';
 
 // Enhanced responsive breakpoints for Cast Section
 const BREAKPOINTS = {
@@ -161,7 +162,11 @@ export const CastSection: React.FC<CastSectionProps> = ({
                 }
               ]}
               onPress={() => onSelectCastMember(item)}
-              activeOpacity={0.7}
+              activeOpacity={isTVDevice ? 1 : 0.7}
+              accessible={true}
+              accessibilityLabel={`${item.name}, ${item.character || 'Cast member'}`}
+              accessibilityRole="button"
+              hasTVPreferredFocus={isTVDevice && index === 0}
             >
               <View style={[
                 styles.castImageContainer,

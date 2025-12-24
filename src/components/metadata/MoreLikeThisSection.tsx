@@ -7,7 +7,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
+  Platform,
 } from 'react-native';
+
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
 import FastImage from '@d11/react-native-fast-image';
 import { useNavigation, StackActions } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
@@ -115,10 +119,14 @@ export const MoreLikeThisSection: React.FC<MoreLikeThisSectionProps> = ({
     }
   };
 
-  const renderItem = ({ item }: { item: StreamingContent }) => (
+  const renderItem = ({ item, index }: { item: StreamingContent; index: number }) => (
     <TouchableOpacity 
       style={[styles.itemContainer, { width: posterWidth, marginRight: itemSpacing }]}
       onPress={() => handleItemPress(item)}
+      accessible={true}
+      accessibilityLabel={`${item.name}. ${item.type === 'movie' ? 'Movie' : 'Series'}`}
+      accessibilityRole="button"
+      accessibilityHint="Double tap to view details"
     >
       <FastImage
         source={{ uri: item.poster }}

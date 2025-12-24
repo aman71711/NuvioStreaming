@@ -3,6 +3,7 @@ import { NavigationContainer, DefaultTheme as NavigationDefaultTheme, DarkTheme 
 import { createNativeStackNavigator, NativeStackNavigationOptions, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createBottomTabNavigator, BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useColorScheme, Platform, Animated, StatusBar, TouchableOpacity, View, Text, AppState, Easing, Dimensions } from 'react-native';
+import { isTV } from '../utils/tvPlatform';
 import { mmkvStorage } from '../services/mmkvStorage';
 import { PaperProvider, MD3DarkTheme, MD3LightTheme, adaptNavigationTheme } from 'react-native-paper';
 import type { MD3Theme } from 'react-native-paper';
@@ -686,6 +687,11 @@ const MainTabs = () => {
                   key={route.key}
                   activeOpacity={0.8}
                   onPress={onPress}
+                  accessible={true}
+                  accessibilityLabel={`${typeof label === 'string' ? label : route.name} tab`}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: isFocused }}
+                  hasTVPreferredFocus={isTV && index === 0 && isFocused}
                   style={{
                     paddingHorizontal: 16,
                     paddingVertical: 10,
@@ -826,6 +832,11 @@ const MainTabs = () => {
                   key={route.key}
                   activeOpacity={0.7}
                   onPress={onPress}
+                  accessible={true}
+                  accessibilityLabel={`${typeof label === 'string' ? label : route.name} tab`}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: isFocused }}
+                  hasTVPreferredFocus={isTV && index === 0 && isFocused}
                   style={{
                     flex: 1,
                     justifyContent: 'center',

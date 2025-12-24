@@ -17,6 +17,9 @@ import { useSettings } from '../hooks/useSettings';
 import { useDownloads } from '../contexts/DownloadsContext';
 import { useToast } from '../contexts/ToastContext';
 
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
+
 interface StreamCardProps {
   stream: Stream;
   onPress: () => void;
@@ -187,6 +190,11 @@ const StreamCard = memo(({
         onLongPress={handleLongPress}
         disabled={isLoading}
         activeOpacity={0.7}
+        accessible={true}
+        accessibilityLabel={`Stream: ${streamInfo.displayName}. ${streamInfo.quality || ''} ${streamInfo.size || ''}`}
+        accessibilityRole="button"
+        accessibilityHint="Double tap to play this stream"
+        hasTVPreferredFocus={isTVDevice && index === 0}
       >
         {/* Scraper Logo */}
         {showLogos && scraperLogo && (

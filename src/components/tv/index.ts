@@ -11,3 +11,6 @@ export type { TVScrollViewProps, TVScrollViewRef } from './TVScrollView';
 
 export { default as TVContentRow } from './TVContentRow';
 export type { TVContentRowProps, ContentItem } from './TVContentRow';
+
+export { default as TVTouchable } from './TVTouchable';
+export type { TVTouchableProps } from './TVTouchable';

@@ -39,6 +39,7 @@ import PluginIcon from '../components/icons/PluginIcon';
 import TraktIcon from '../components/icons/TraktIcon';
 import TMDBIcon from '../components/icons/TMDBIcon';
 import MDBListIcon from '../components/icons/MDBListIcon';
+import { isTV as isTVDevice } from '../utils/tvPlatform';
 
 const { width, height } = Dimensions.get('window');
 const isTablet = width >= 768;
@@ -128,7 +129,7 @@ const SettingItem: React.FC<SettingItemProps> = ({
 
   return (
     <TouchableOpacity
-      activeOpacity={0.6}
+      activeOpacity={isTVDevice ? 1 : 0.6}
       onPress={onPress}
       style={[
         styles.settingItem,
@@ -136,6 +137,9 @@ const SettingItem: React.FC<SettingItemProps> = ({
         { borderBottomColor: currentTheme.colors.elevation2 },
         isTablet && styles.tabletSettingItem
       ]}
+      accessible={true}
+      accessibilityLabel={`${title}${description ? `, ${description}` : ''}`}
+      accessibilityRole="button"
     >
       <View style={[
         styles.settingIconContainer,

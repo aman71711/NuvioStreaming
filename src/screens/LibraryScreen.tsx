@@ -20,6 +20,9 @@ import {
   ScrollView,
   BackHandler,
 } from 'react-native';
+
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
 import { FlashList } from '@shopify/flash-list';
 import { useNavigation } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
@@ -394,6 +397,10 @@ const LibraryScreen = () => {
         setMenuVisible(true);
       }}
       activeOpacity={0.7}
+      accessible={true}
+      accessibilityLabel={`${item.name}. ${item.type === 'movie' ? 'Movie' : 'Series'}${item.watched ? '. Watched' : ''}`}
+      accessibilityRole="button"
+      accessibilityHint="Double tap to view details"
     >
       <View>
         <View style={[styles.posterContainer, { shadowColor: currentTheme.colors.black }]}>
@@ -468,6 +475,10 @@ const LibraryScreen = () => {
         }
       }}
       activeOpacity={0.7}
+      accessible={true}
+      accessibilityLabel={`Trakt collections. ${traktAuthenticated && traktFolders.length > 0 ? `${traktFolders.length} items` : 'Not connected'}`}
+      accessibilityRole="button"
+      accessibilityHint="Double tap to view Trakt collections"
     >
       <View>
         <View style={[styles.posterContainer, styles.folderContainer, { shadowColor: currentTheme.colors.black, backgroundColor: currentTheme.colors.elevation1 }]}>

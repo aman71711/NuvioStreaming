@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, useWindowDimensions, useColorScheme, FlatList, Modal, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, useWindowDimensions, useColorScheme, FlatList, Modal, Pressable, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import FastImage from '@d11/react-native-fast-image';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -16,6 +16,9 @@ import { TraktService } from '../../services/traktService';
 import { watchedService } from '../../services/watchedService';
 import { logger } from '../../utils/logger';
 import { mmkvStorage } from '../../services/mmkvStorage';
+
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
 
 // Enhanced responsive breakpoints for Seasons Section
 const BREAKPOINTS = {
@@ -863,6 +866,11 @@ const SeriesContentComponent: React.FC<SeriesContentProps> = ({
                       selectedSeason === season && styles.selectedSeasonTextButton
                     ]}
                     onPress={() => onSeasonChange(season)}
+                    accessible={true}
+                    accessibilityLabel={season === 0 ? 'Specials' : `Season ${season}`}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: selectedSeason === season }}
+                    hasTVPreferredFocus={isTVDevice && selectedSeason === season}
                   >
                     <Text style={[
                       styles.seasonTextButtonText,
@@ -898,6 +906,11 @@ const SeriesContentComponent: React.FC<SeriesContentProps> = ({
                     selectedSeason === season && [styles.selectedSeasonButton, { borderColor: currentTheme.colors.primary }]
                   ]}
                   onPress={() => onSeasonChange(season)}
+                  accessible={true}
+                  accessibilityLabel={season === 0 ? 'Specials' : `Season ${season}`}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: selectedSeason === season }}
+                  hasTVPreferredFocus={isTVDevice && selectedSeason === season}
                 >
                   <View style={[
                     styles.seasonPosterContainer,
@@ -1039,6 +1052,10 @@ const SeriesContentComponent: React.FC<SeriesContentProps> = ({
         onLongPress={() => handleEpisodeLongPress(episode)}
         delayLongPress={400}
         activeOpacity={0.7}
+        accessible={true}
+        accessibilityLabel={`Episode ${episode.episode_number}: ${episode.name}`}
+        accessibilityRole="button"
+        accessibilityHint="Double tap to play this episode"
       >
         <View style={[
           styles.episodeImageContainer,
@@ -1322,6 +1339,10 @@ const SeriesContentComponent: React.FC<SeriesContentProps> = ({
         onLongPress={() => handleEpisodeLongPress(episode)}
         delayLongPress={400}
         activeOpacity={0.85}
+        accessible={true}
+        accessibilityLabel={`Episode ${episode.episode_number}: ${episode.name}`}
+        accessibilityRole="button"
+        accessibilityHint="Double tap to play this episode"
       >
         {/* Solid outline replaces gradient border */}
 

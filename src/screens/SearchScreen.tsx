@@ -18,6 +18,9 @@ import {
   Platform,
   Easing,
 } from 'react-native';
+
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
 import { MaterialIcons, Feather } from '@expo/vector-icons';
@@ -663,6 +666,10 @@ const SearchScreen = () => {
         }}
         delayLongPress={300}
         activeOpacity={0.7}
+        accessible={true}
+        accessibilityLabel={`${item.name || item.id}. ${item.type === 'movie' ? 'Movie' : 'Series'}`}
+        accessibilityRole="button"
+        accessibilityHint="Double tap to view details"
       >
         <View style={[styles.horizontalItemPosterContainer, {
           width: itemWidth,
