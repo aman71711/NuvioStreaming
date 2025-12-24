@@ -17,6 +17,7 @@ import { Stream } from '../types/streams';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { PostHogProvider } from 'posthog-react-native';
+import TVTouchable from '../components/tv/TVTouchable';
 
 // Optional iOS Glass effect (expo-glass-effect) with safe fallback
 let GlassViewComp: any = null;
@@ -683,8 +684,11 @@ const MainTabs = () => {
               };
 
               return (
-                <TouchableOpacity
+                <TVTouchable
                   key={route.key}
+                  tvZone="tabs"
+                  tvId={`tab-${route.key}`}
+                  tvOrder={index}
                   activeOpacity={0.8}
                   onPress={onPress}
                   accessible={true}
@@ -708,7 +712,7 @@ const MainTabs = () => {
                   }}>
                     {typeof label === 'string' ? label : ''}
                   </Text>
-                </TouchableOpacity>
+                </TVTouchable>
               );
             })}
           </View>
@@ -828,8 +832,11 @@ const MainTabs = () => {
               }
 
               return (
-                <TouchableOpacity
+                <TVTouchable
                   key={route.key}
+                  tvZone="tabs"
+                  tvId={`tab-${route.key}`}
+                  tvOrder={index}
                   activeOpacity={0.7}
                   onPress={onPress}
                   accessible={true}
@@ -861,7 +868,7 @@ const MainTabs = () => {
                   >
                     {typeof label === 'string' ? label : ''}
                   </Text>
-                </TouchableOpacity>
+                </TVTouchable>
               );
             })}
           </View>

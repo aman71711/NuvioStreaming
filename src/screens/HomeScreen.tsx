@@ -48,6 +48,7 @@ import { tmdbService } from '../services/tmdbService';
 import { logger } from '../utils/logger';
 import { storageService } from '../services/storageService';
 import { getCatalogDisplayName, clearCustomNameCache } from '../utils/catalogNameUtils';
+import TVTouchable from '../components/tv/TVTouchable';
 import { useHomeCatalogs } from '../hooks/useHomeCatalogs';
 import { useFeaturedContent } from '../hooks/useFeaturedContent';
 import { useSettings, settingsEmitter } from '../hooks/useSettings';
@@ -793,7 +794,9 @@ const HomeScreen = () => {
         return (
           <View>
             <View style={styles.loadMoreContainer}>
-              <TouchableOpacity
+              <TVTouchable
+                tvZone="home-actions"
+                tvId="load-more-catalogs"
                 style={[styles.loadMoreButton, { backgroundColor: currentTheme.colors.primary }]}
                 onPress={handleLoadMoreCatalogs}
                 accessible={true}
@@ -804,7 +807,7 @@ const HomeScreen = () => {
                 <Text style={[styles.loadMoreText, { color: currentTheme.colors.white }]}>
                   Load More Catalogs
                 </Text>
-              </TouchableOpacity>
+              </TVTouchable>
             </View>
           </View>
         );
@@ -826,7 +829,9 @@ const HomeScreen = () => {
           <Text style={{ color: currentTheme.colors.textDark, marginTop: 8, fontSize: 16, textAlign: 'center' }}>
             No content available
           </Text>
-          <TouchableOpacity
+          <TVTouchable
+            tvZone="home-actions"
+            tvId="add-catalogs"
             style={[styles.addCatalogButton, { backgroundColor: currentTheme.colors.primary }]}
             onPress={() => navigation.navigate('Settings')}
             accessible={true}
@@ -835,7 +840,7 @@ const HomeScreen = () => {
           >
             <MaterialIcons name="add-circle" size={20} color={currentTheme.colors.white} />
             <Text style={[styles.addCatalogButtonText, { color: currentTheme.colors.white }]}>Add Catalogs</Text>
-          </TouchableOpacity>
+          </TVTouchable>
         </View>
       )}
     </>

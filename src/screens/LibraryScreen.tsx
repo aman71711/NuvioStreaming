@@ -28,6 +28,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
 import { MaterialIcons, Feather } from '@expo/vector-icons';
 import FastImage from '@d11/react-native-fast-image';
+import TVTouchable from '../components/tv/TVTouchable';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { catalogService } from '../services/catalogService';
@@ -126,7 +127,10 @@ const TraktItem = React.memo(({
   }, [navigation, item.imdbId, item.type]);
 
   return (
-    <TouchableOpacity
+    <TVTouchable
+      tvZone="library"
+      tvId={`library-${item.imdbId}`}
+      tvOrder={index}
       style={[styles.itemContainer, { width }]}
       onPress={handlePress}
       activeOpacity={0.7}
@@ -156,7 +160,7 @@ const TraktItem = React.memo(({
           </Text>
         )}
       </View>
-    </TouchableOpacity>
+    </TVTouchable>
   );
 });
 
@@ -396,7 +400,9 @@ const LibraryScreen = () => {
   }, [traktAuthenticated, watchedMovies, watchedShows, watchlistMovies, watchlistShows, collectionMovies, collectionShows, continueWatching, ratedContent]);
 
   const renderItem = ({ item }: { item: LibraryItem }) => (
-    <TouchableOpacity
+    <TVTouchable
+      tvZone="library"
+      tvId={`library-item-${item.id}`}
       style={[styles.itemContainer, { width: itemWidth }]}
       onPress={() => navigation.navigate('Metadata', { id: item.id, type: item.type })}
       onLongPress={() => {
@@ -438,11 +444,13 @@ const LibraryScreen = () => {
           </Text>
         )}
       </View>
-    </TouchableOpacity>
+    </TVTouchable>
   );
 
   const renderTraktCollectionFolder = ({ folder }: { folder: TraktFolder }) => (
-    <TouchableOpacity
+    <TVTouchable
+      tvZone="library"
+      tvId={`trakt-folder-${folder.id}`}
       style={[styles.itemContainer, { width: itemWidth }]}
       onPress={() => {
         setSelectedTraktFolder(folder.id);
@@ -470,11 +478,13 @@ const LibraryScreen = () => {
           </Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </TVTouchable>
   );
 
   const renderTraktFolder = () => (
-    <TouchableOpacity
+    <TVTouchable
+      tvZone="library"
+      tvId="trakt-main-folder"
       style={[styles.itemContainer, { width: itemWidth }]}
       onPress={() => {
         if (!traktAuthenticated) {
@@ -511,7 +521,7 @@ const LibraryScreen = () => {
           </Text>
         )}
       </View>
-    </TouchableOpacity>
+    </TVTouchable>
   );
 
   const renderTraktItem = useCallback(({ item, index }: { item: TraktDisplayItem; index?: number }) => {
@@ -738,7 +748,9 @@ const LibraryScreen = () => {
             <Text style={[styles.emptySubtext, { color: currentTheme.colors.mediumGray }]}>
               Your Trakt collections will appear here once you start using Trakt
             </Text>
-            <TouchableOpacity
+            <TVTouchable
+              tvZone="library-actions"
+              tvId="refresh-trakt"
               style={[styles.exploreButton, {
                 backgroundColor: currentTheme.colors.primary,
                 shadowColor: currentTheme.colors.black
@@ -749,7 +761,7 @@ const LibraryScreen = () => {
               activeOpacity={0.7}
             >
               <Text style={[styles.exploreButtonText, { color: currentTheme.colors.white }]}>Load Collections</Text>
-            </TouchableOpacity>
+            </TVTouchable>
           </View>
         );
       }

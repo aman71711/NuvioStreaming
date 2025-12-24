@@ -14,6 +14,7 @@ import { TraktService } from '../../services/traktService';
 import { useTraktContext } from '../../contexts/TraktContext';
 import AnimatedReanimated, { FadeIn } from 'react-native-reanimated';
 import { isTV, tvDimensions } from '../../utils/tvPlatform';
+import TVTouchable from '../tv/TVTouchable';
 
 interface ContentItemProps {
   item: StreamingContent;
@@ -354,7 +355,9 @@ const ContentItem = ({ item, onPress, shouldLoadImage: shouldLoadImageProp, defe
         ]}
       >
         <AnimatedReanimated.View entering={FadeIn.duration(300)}>
-          <TouchableOpacity
+          <TVTouchable
+            tvZone="catalogs"
+            tvId={item.id}
             style={[
               styles.contentItem, 
               { width: finalWidth, aspectRatio: finalAspectRatio, borderRadius },
@@ -424,7 +427,7 @@ const ContentItem = ({ item, onPress, shouldLoadImage: shouldLoadImageProp, defe
               </View>
             )}
           </View>
-        </TouchableOpacity>
+        </TVTouchable>
         </AnimatedReanimated.View>
         {settings.showPosterTitles && (
           <Text
