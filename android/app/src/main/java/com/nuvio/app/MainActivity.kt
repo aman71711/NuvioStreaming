@@ -2,6 +2,7 @@ package com.nuvio.app
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
@@ -9,21 +10,57 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnable
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 import expo.modules.ReactActivityDelegateWrapper
-import com.reactnative.googlecast.api.RNGCCastContext
 
 class MainActivity : ReactActivity() {
+  
+  companion object {
+    private const val TAG = "MainActivity"
+  }
+  
   override fun onCreate(savedInstanceState: Bundle?) {
-    // Set the theme to AppTheme BEFORE onCreate to support
-    // coloring the background, status bar, and navigation bar.
-    // This is required for expo-splash-screen.
-    setTheme(R.style.AppTheme);
-    super.onCreate(null)
-// @generated begin react-native-google-cast-onCreate - expo prebuild (DO NOT MODIFY) sync-489050f2bf9933a98bbd9d93137016ae14c22faa
-    RNGCCastContext.getSharedInstance(this)
-// @generated end react-native-google-cast-onCreate
-    
-    // Initialize Google Cast context
-    RNGCCastContext.getSharedInstance(this)
+    try {
+      // Set the theme to AppTheme BEFORE onCreate to support
+      // coloring the background, status bar, and navigation bar.
+      // This is required for expo-splash-screen.
+      setTheme(R.style.AppTheme)
+      super.onCreate(null)
+      
+      // Initialize Google Cast context safely (may not be available on all devices)
+      initializeGoogleCast()
+      
+    } catch (e: Exception) {
+      Log.e(TAG, "Error in onCreate: ${e.message}", e)
+      // Still call super.onCreate to prevent crash
+      if (!isFinishing) {
+        try {
+          super.onCreate(null)
+        } catch (e2: Exception) {
+          Log.e(TAG, "Critical error in onCreate fallback: ${e2.message}", e2)
+        }
+      }
+    }
+  }
+  
+  /**
+   * Safely initialize Google Cast - may not be available on all devices
+   * (e.g., Amazon Fire TV, some Android TV, WSA, emulators)
+   */
+  private fun initializeGoogleCast() {
+    try {
+      // Check if Google Play Services is available before initializing Cast
+      val googleApiAvailability = com.google.android.gms.common.GoogleApiAvailability.getInstance()
+      val resultCode = googleApiAvailability.isGooglePlayServicesAvailable(this)
+      
+      if (resultCode == com.google.android.gms.common.ConnectionResult.SUCCESS) {
+        com.reactnative.googlecast.api.RNGCCastContext.getSharedInstance(this)
+        Log.d(TAG, "Google Cast initialized successfully")
+      } else {
+        Log.w(TAG, "Google Play Services not available (code: $resultCode), skipping Cast initialization")
+      }
+    } catch (e: Exception) {
+      // Google Cast not available on this device - this is fine, just skip it
+      Log.w(TAG, "Google Cast initialization skipped: ${e.message}")
+    }
   }
 
   /**

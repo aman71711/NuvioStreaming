@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.KeyEvent
 
 import com.facebook.react.ReactActivity
@@ -26,17 +27,30 @@ import expo.modules.ReactActivityDelegateWrapper
  */
 class TVActivity : ReactActivity() {
     
+    companion object {
+        private const val TAG = "TVActivity"
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Check if this is a real Android TV device
-        // If not (e.g., WSA, emulator with leanback), redirect to MainActivity for tablet mode
-        if (!isRealAndroidTV()) {
+        try {
+            // Check if this is a real Android TV device
+            // If not (e.g., WSA, emulator with leanback), redirect to MainActivity for tablet mode
+            if (!isRealAndroidTV()) {
+                Log.d(TAG, "Not a real Android TV, redirecting to MainActivity")
+                redirectToMainActivity()
+                return
+            }
+            
+            Log.d(TAG, "Real Android TV detected, using TV interface")
+            // Set the TV theme BEFORE onCreate (only for real TV)
+            setTheme(R.style.Theme_App_TV)
+            super.onCreate(null)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in onCreate, falling back to MainActivity: ${e.message}", e)
+            // If anything goes wrong, redirect to MainActivity as fallback
             redirectToMainActivity()
-            return
         }
-        
-        // Set the TV theme BEFORE onCreate (only for real TV)
-        setTheme(R.style.Theme_App_TV)
-        super.onCreate(null)
     }
 
     /**
