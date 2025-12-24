@@ -20,6 +20,9 @@ import {
   InteractionManager,
   AppState
 } from 'react-native';
+
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
 import { FlashList } from '@shopify/flash-list';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
@@ -788,6 +791,9 @@ const HomeScreen = () => {
               <TouchableOpacity
                 style={[styles.loadMoreButton, { backgroundColor: currentTheme.colors.primary }]}
                 onPress={handleLoadMoreCatalogs}
+                accessible={true}
+                accessibilityLabel="Load more catalogs"
+                accessibilityRole="button"
               >
                 <MaterialIcons name="expand-more" size={20} color={currentTheme.colors.white} />
                 <Text style={[styles.loadMoreText, { color: currentTheme.colors.white }]}>
@@ -818,6 +824,9 @@ const HomeScreen = () => {
           <TouchableOpacity
             style={[styles.addCatalogButton, { backgroundColor: currentTheme.colors.primary }]}
             onPress={() => navigation.navigate('Settings')}
+            accessible={true}
+            accessibilityLabel="Add catalogs"
+            accessibilityRole="button"
           >
             <MaterialIcons name="add-circle" size={20} color={currentTheme.colors.white} />
             <Text style={[styles.addCatalogButtonText, { color: currentTheme.colors.white }]}>Add Catalogs</Text>

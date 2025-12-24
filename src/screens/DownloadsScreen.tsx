@@ -13,6 +13,9 @@ import {
   Clipboard,
   Linking,
 } from 'react-native';
+
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -85,6 +88,9 @@ const EmptyDownloadsState: React.FC<{ navigation: NavigationProp<RootStackParamL
         onPress={() => {
           navigation.navigate('Search');
         }}
+        accessible={true}
+        accessibilityLabel="Explore content"
+        accessibilityRole="button"
       >
         <Text style={[styles.exploreButtonText, { color: currentTheme.colors.background }]}>
           Explore Content
@@ -209,6 +215,10 @@ const DownloadItemComponent: React.FC<{
       onPress={() => onPress(item)}
       onLongPress={handleLongPress}
       activeOpacity={0.8}
+      accessible={true}
+      accessibilityLabel={`${item.title}${item.type === 'series' && item.season && item.episode ? `, Season ${item.season} Episode ${item.episode}` : ''}. Status: ${item.status}`}
+      accessibilityRole="button"
+      accessibilityHint="Double tap to play, long press for options"
     >
       {/* Poster */}
       <View style={styles.posterContainer}>

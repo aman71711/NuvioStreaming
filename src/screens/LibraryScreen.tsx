@@ -128,6 +128,10 @@ const TraktItem = React.memo(({
       style={[styles.itemContainer, { width }]}
       onPress={handlePress}
       activeOpacity={0.7}
+      accessible={true}
+      accessibilityLabel={`${item.name}. ${item.type === 'movie' ? 'Movie' : 'Series'}`}
+      accessibilityRole="button"
+      accessibilityHint="Double tap to view details"
     >
       <View>
         <View style={[styles.posterContainer, { shadowColor: currentTheme.colors.black }]}>
@@ -442,6 +446,10 @@ const LibraryScreen = () => {
         loadAllCollections();
       }}
       activeOpacity={0.7}
+      accessible={true}
+      accessibilityLabel={`${folder.name}. ${folder.itemCount} items`}
+      accessibilityRole="button"
+      accessibilityHint="Double tap to open folder"
     >
       <View style={[styles.posterContainer, styles.folderContainer, { shadowColor: currentTheme.colors.black, backgroundColor: currentTheme.colors.elevation1 }]}>
         <View style={styles.folderGradient}>

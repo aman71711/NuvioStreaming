@@ -12,6 +12,9 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -868,6 +871,9 @@ const MetadataScreen: React.FC = () => {
           <TouchableOpacity
             style={[styles.retryButton, { backgroundColor: currentTheme.colors.primary }]}
             onPress={loadMetadata}
+            accessible={true}
+            accessibilityLabel="Try again"
+            accessibilityRole="button"
           >
             <MaterialIcons name="refresh" size={20} color={currentTheme.colors.white} style={{ marginRight: 8 }} />
             <Text style={styles.retryButtonText}>Try Again</Text>
@@ -875,6 +881,9 @@ const MetadataScreen: React.FC = () => {
           <TouchableOpacity
             style={[styles.backButton, { borderColor: currentTheme.colors.primary }]}
             onPress={handleBack}
+            accessible={true}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
           >
             <Text style={[styles.backButtonText, { color: currentTheme.colors.primary }]}>Go Back</Text>
           </TouchableOpacity>
@@ -1245,6 +1254,9 @@ const MetadataScreen: React.FC = () => {
                         type: 'movie',
                         title: metadata.name || 'Gallery'
                       })}
+                      accessible={true}
+                      accessibilityLabel="View backdrop gallery"
+                      accessibilityRole="button"
                     >
                       <Text style={[styles.backdropGalleryText, { color: currentTheme.colors.highEmphasis }]}>Backdrop Gallery</Text>
                       <MaterialIcons name="chevron-right" size={24} color={currentTheme.colors.highEmphasis} />

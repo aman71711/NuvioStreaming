@@ -8,6 +8,9 @@ import { styles } from '../utils/playerStyles'; // Updated styles
 import { getTrackDisplayName } from '../utils/playerUtils';
 import { useTheme } from '../../../contexts/ThemeContext';
 
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
+
 interface PlayerControlsProps {
   showControls: boolean;
   fadeAnim: Animated.Value;
@@ -336,7 +339,13 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                   />
                 </TouchableOpacity>
               )}
-              <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+              <TouchableOpacity 
+                style={styles.closeButton} 
+                onPress={handleClose}
+                accessible={true}
+                accessibilityLabel="Close player"
+                accessibilityRole="button"
+              >
                 <Ionicons name="close" size={closeIconSize} color="white" />
               </TouchableOpacity>
             </View>
@@ -353,6 +362,9 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
           <TouchableOpacity 
             onPress={() => handleSeekWithAnimation(-10)} 
             activeOpacity={0.7}
+            accessible={true}
+            accessibilityLabel="Rewind 10 seconds"
+            accessibilityRole="button"
           >
             <Animated.View style={[
               styles.seekButtonContainer,
@@ -424,6 +436,10 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
             onPress={handlePlayPauseWithAnimation} 
             activeOpacity={0.7}
             style={{ marginHorizontal: buttonSpacing }}
+            accessible={true}
+            accessibilityLabel={paused ? "Play" : "Pause"}
+            accessibilityRole="button"
+            hasTVPreferredFocus={isTVDevice}
           >
             <View style={[styles.playButtonCircle, { width: playButtonSize, height: playButtonSize }]}>
               <Animated.View style={[
@@ -452,6 +468,9 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
             <TouchableOpacity 
               onPress={() => handleSeekWithAnimation(10)} 
               activeOpacity={0.7}
+              accessible={true}
+              accessibilityLabel="Forward 10 seconds"
+              accessibilityRole="button"
             >
               <Animated.View style={[
                 styles.seekButtonContainer,
@@ -533,7 +552,13 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
             {/* Center Buttons Container with rounded background - wraps all buttons */}
             <View style={styles.centerControlsContainer} pointerEvents="box-none">
               {/* Left Side: Aspect Ratio Button */}
-              <TouchableOpacity style={styles.iconButton} onPress={cycleAspectRatio}>
+              <TouchableOpacity 
+                style={styles.iconButton} 
+                onPress={cycleAspectRatio}
+                accessible={true}
+                accessibilityLabel="Change aspect ratio"
+                accessibilityRole="button"
+              >
                 <Ionicons name="expand-outline" size={24} color="white" />
               </TouchableOpacity>
 
@@ -541,6 +566,9 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
               <TouchableOpacity
                 style={styles.iconButton}
                 onPress={() => setShowSubtitleModal(!isSubtitleModalOpen)}
+                accessible={true}
+                accessibilityLabel="Subtitles"
+                accessibilityRole="button"
               >
                 <Ionicons name="text" size={24} color="white" />
               </TouchableOpacity>
@@ -550,13 +578,22 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                 <TouchableOpacity
                   style={styles.iconButton}
                   onPress={() => setShowSourcesModal(true)}
+                  accessible={true}
+                  accessibilityLabel="Change video source"
+                  accessibilityRole="button"
                 >
                   <Ionicons name="cloud-outline" size={24} color="white" />
                 </TouchableOpacity>
               )}
 
               {/* Playback Speed Button */}
-              <TouchableOpacity style={styles.iconButton} onPress={() => setShowSpeedModal(true)}>
+              <TouchableOpacity 
+                style={styles.iconButton} 
+                onPress={() => setShowSpeedModal(true)}
+                accessible={true}
+                accessibilityLabel="Playback speed"
+                accessibilityRole="button"
+              >
                 <Ionicons name="speedometer-outline" size={24} color="white" />
               </TouchableOpacity>
 
@@ -565,6 +602,10 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                 style={styles.iconButton}
                 onPress={() => setShowAudioModal(true)}
                 disabled={ksAudioTracks.length <= 1}
+                accessible={true}
+                accessibilityLabel="Audio tracks"
+                accessibilityRole="button"
+                accessibilityState={{ disabled: ksAudioTracks.length <= 1 }}
               >
                 <Ionicons 
                   name="musical-notes-outline" 
@@ -578,6 +619,9 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                 <TouchableOpacity
                   style={styles.iconButton}
                   onPress={() => setShowEpisodesModal(true)}
+                  accessible={true}
+                  accessibilityLabel="Episodes list"
+                  accessibilityRole="button"
                 >
                   <Ionicons name="list" size={24} color="white" />
                 </TouchableOpacity>
