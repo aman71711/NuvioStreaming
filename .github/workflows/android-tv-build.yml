@@ -1,268 +1,381 @@
 name: Android TV Build
 
+# ═══════════════════════════════════════════════════════════════════════════
+# WORKFLOW TRIGGERS
+# ═══════════════════════════════════════════════════════════════════════════
 on:
   push:
-    branches:
-      - main
-      - android-tv
-    tags:
-      - 'v*'
+    branches: [main, android-tv]
+    tags: ['v*']
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
     inputs:
       build_type:
-        description: 'Build type (release recommended)'
+        description: 'Build variant'
         required: true
         default: 'release'
         type: choice
-        options:
-          - release
-          - debug
+        options: [release, debug, both]
       clean_build:
-        description: 'Force clean build (ignore cache)'
+        description: 'Clean build (ignore cache)'
         required: false
         default: false
         type: boolean
 
+# ═══════════════════════════════════════════════════════════════════════════
+# ENVIRONMENT VARIABLES
+# ═══════════════════════════════════════════════════════════════════════════
+env:
+  NODE_VERSION: '20'
+  JAVA_VERSION: '17'
+  GRADLE_OPTS: '-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=512m -Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Dorg.gradle.parallel=true'
+
+# ═══════════════════════════════════════════════════════════════════════════
+# BUILD JOB
+# ═══════════════════════════════════════════════════════════════════════════
 jobs:
   build-android:
+    name: Build Android TV APK
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: write
     
+    # ───────────────────────────────────────────────────────────────────────
+    # OUTPUTS - Make artifacts available to other jobs/workflows
+    # ───────────────────────────────────────────────────────────────────────
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+      build-success: ${{ steps.build-status.outputs.success }}
+    
     steps:
-      - name: Checkout code
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 1: CHECKOUT CODE
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 📦 Checkout repository
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          fetch-depth: 0  # Full history for proper versioning
 
-      - name: Setup Java
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 2: SETUP ENVIRONMENT
+      # ═════════════════════════════════════════════════════════════════════
+      - name: ☕ Setup Java JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
 
-      # Safe Gradle caching - invalidates when dependencies change
-      - name: Cache Gradle packages
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🤖 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 3: CACHE MANAGEMENT
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 💾 Cache Gradle dependencies
         if: github.event.inputs.clean_build != 'true'
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          # Cache key includes hash of all gradle files - ensures cache invalidates when dependencies change
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/gradle.properties') }}
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             gradle-${{ runner.os }}-
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 4: GET PROJECT VERSION
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 🔢 Get app version
+        id: get-version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "📱 Building version: ${VERSION}"
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Apply patches
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 5: INSTALL DEPENDENCIES
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 📚 Install npm dependencies
+        run: |
+          echo "Installing dependencies..."
+          npm ci --prefer-offline --no-audit
+          
+      - name: 🔧 Apply patches
         run: npm run postinstall
+        continue-on-error: true
 
-      - name: Create local.properties
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 6: CONFIGURE ANDROID BUILD
+      # ═════════════════════════════════════════════════════════════════════
+      - name: ⚙️ Configure Android SDK
         run: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+          chmod +x android/gradlew
 
-      - name: Make gradlew executable
-        run: chmod +x android/gradlew
-
-      # Check disk space before building
-      - name: Check available disk space
-        run: |
-          echo "=== Disk space before build ==="
-          df -h
-          FREE_SPACE=$(df -BG / | tail -1 | awk '{print $4}' | sed 's/G//')
-          echo "Free space: ${FREE_SPACE}GB"
-          if [ "$FREE_SPACE" -lt 5 ]; then
-            echo "WARNING: Less than 5GB free space available!"
-            echo "Build may fail due to insufficient disk space."
-          fi
-
-      # Create debug keystore for signing (required for release builds using debug signing)
-      - name: Create Debug Keystore
+      - name: 🔐 Create debug keystore
         run: |
           mkdir -p android/app
-          # Remove existing keystore if it exists to avoid "alias already exists" error
           rm -f android/app/debug.keystore
-          keytool -genkeypair -v -storetype PKCS12 -keystore android/app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-        
-      # Clean build if requested (to avoid any cache issues)
-      - name: Clean previous build (if clean build requested)
+          keytool -genkeypair -v -storetype PKCS12 \
+            -keystore android/app/debug.keystore \
+            -storepass android -alias androiddebugkey -keypass android \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 7: CHECK DISK SPACE
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 💽 Check disk space
+        run: |
+          echo "=== Disk Space Before Build ==="
+          df -h
+          FREE_GB=$(df -BG / | tail -1 | awk '{print $4}' | sed 's/G//')
+          echo "💾 Free space: ${FREE_GB}GB"
+          if [ "$FREE_GB" -lt 5 ]; then
+            echo "⚠️  WARNING: Less than 5GB free space!"
+          fi
+
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 8: CLEAN BUILD (IF REQUESTED)
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 🧹 Clean previous build
         if: github.event.inputs.clean_build == 'true'
         working-directory: android
-        run: ./gradlew clean
+        run: ./gradlew clean --no-daemon
 
-      - name: Build Android Release APK
-        if: github.event.inputs.build_type == 'release' || github.event.inputs.build_type == ''
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 9: BUILD RELEASE APK
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 🔨 Build Release APK
+        id: build-release
+        if: |
+          github.event.inputs.build_type == 'release' || 
+          github.event.inputs.build_type == 'both' || 
+          github.event.inputs.build_type == ''
         working-directory: android
         run: |
-          ./gradlew assembleRelease --no-daemon --stacktrace --build-cache
-        env:
-          GRADLE_OPTS: '-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=512m -Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Dorg.gradle.parallel=true'
+          echo "🔨 Building Release APK..."
+          ./gradlew assembleRelease --no-daemon --stacktrace
+          echo "✅ Release build completed!"
+        continue-on-error: false
 
-      # Clean up Gradle cache after build to free space for artifact upload
-      - name: Clean up build cache
-        if: always()
-        run: |
-          # Remove intermediate build files to save space
-          rm -rf android/.gradle/build-cache || true
-          rm -rf android/app/build/intermediates || true
-          rm -rf android/app/build/tmp || true
-          # Show remaining space
-          df -h
-
-      # 🚀 EARLY UPLOAD - Get your Release APK immediately after build!
-      - name: Upload Release APK (EARLY - Available Now!)
-        if: github.event.inputs.build_type == 'release' || github.event.inputs.build_type == ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-tv-release-apk-early
-          path: android/app/build/outputs/apk/release/*.apk
-          retention-days: 30
-
-      - name: Build Android Debug APK
-        if: github.event.inputs.build_type == 'debug'
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 10: BUILD DEBUG APK
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 🔨 Build Debug APK
+        id: build-debug
+        if: |
+          github.event.inputs.build_type == 'debug' || 
+          github.event.inputs.build_type == 'both'
         working-directory: android
         run: |
-          ./gradlew assembleDebug --no-daemon --stacktrace --build-cache
-        env:
-          GRADLE_OPTS: '-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=512m -Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Dorg.gradle.parallel=true'
+          echo "🔨 Building Debug APK..."
+          ./gradlew assembleDebug --no-daemon --stacktrace
+          echo "✅ Debug build completed!"
+        continue-on-error: false
 
-      - name: List APK files
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 11: VERIFY BUILD OUTPUTS
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 🔍 Verify APK files
+        id: verify-apks
         run: |
-          echo "=== Release APKs ==="
-          find android/app/build/outputs/apk/release -name "*.apk" -type f 2>/dev/null || echo "No release APKs found"
-          echo "=== Debug APKs ==="
-          find android/app/build/outputs/apk/debug -name "*.apk" -type f 2>/dev/null || echo "No debug APKs found"
-
-      - name: Rename APKs for clarity
-        run: |
-          # Get version from package.json
-          VERSION=$(node -p "require('./package.json').version")
+          echo "=== 📦 Built APKs ==="
           
-          # Rename release APKs
+          # Check Release APKs
           if [ -d "android/app/build/outputs/apk/release" ]; then
-            for apk in android/app/build/outputs/apk/release/*.apk; do
+            RELEASE_COUNT=$(find android/app/build/outputs/apk/release -name "*.apk" -type f | wc -l)
+            echo "✅ Release APKs: $RELEASE_COUNT"
+            find android/app/build/outputs/apk/release -name "*.apk" -type f -exec ls -lh {} \;
+          else
+            echo "ℹ️  No release APKs"
+          fi
+          
+          # Check Debug APKs
+          if [ -d "android/app/build/outputs/apk/debug" ]; then
+            DEBUG_COUNT=$(find android/app/build/outputs/apk/debug -name "*.apk" -type f | wc -l)
+            echo "✅ Debug APKs: $DEBUG_COUNT"
+            find android/app/build/outputs/apk/debug -name "*.apk" -type f -exec ls -lh {} \;
+          else
+            echo "ℹ️  No debug APKs"
+          fi
+
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 12: RENAME APKs WITH VERSION
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 🏷️  Rename APKs with version
+        run: |
+          VERSION="${{ steps.get-version.outputs.version }}"
+          echo "📝 Renaming APKs with version: ${VERSION}"
+          
+          # Rename Release APKs
+          if [ -d "android/app/build/outputs/apk/release" ]; then
+            for apk in android/app/build/outputs/apk/release/app-*.apk; do
               if [ -f "$apk" ]; then
-                filename=$(basename "$apk" .apk)
-                # Add TV suffix to indicate Android TV support
-                mv "$apk" "android/app/build/outputs/apk/release/Nuvio-TV-${VERSION}-${filename}.apk"
+                arch=$(basename "$apk" | sed 's/app-//' | sed 's/-release.apk//')
+                new_name="Nuvio-TV-${VERSION}-${arch}.apk"
+                mv "$apk" "android/app/build/outputs/apk/release/${new_name}"
+                echo "✅ Renamed to: ${new_name}"
               fi
             done
           fi
           
-          # Rename debug APKs
+          # Rename Debug APKs
           if [ -d "android/app/build/outputs/apk/debug" ]; then
-            for apk in android/app/build/outputs/apk/debug/*.apk; do
+            for apk in android/app/build/outputs/apk/debug/app-*.apk; do
               if [ -f "$apk" ]; then
-                filename=$(basename "$apk" .apk)
-                mv "$apk" "android/app/build/outputs/apk/debug/Nuvio-TV-${VERSION}-${filename}.apk"
+                arch=$(basename "$apk" | sed 's/app-//' | sed 's/-debug.apk//')
+                new_name="Nuvio-TV-${VERSION}-${arch}-debug.apk"
+                mv "$apk" "android/app/build/outputs/apk/debug/${new_name}"
+                echo "✅ Renamed to: ${new_name}"
               fi
             done
           fi
 
-      - name: Upload Release APK (Final - with version name)
-        if: github.event.inputs.build_type == 'release' || github.event.inputs.build_type == ''
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 13: UPLOAD RELEASE APKs
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 📤 Upload Release APKs
+        if: |
+          always() &&
+          (steps.build-release.outcome == 'success')
         uses: actions/upload-artifact@v4
         with:
-          name: android-tv-release-apk
+          name: Nuvio-TV-Release-v${{ steps.get-version.outputs.version }}
           path: android/app/build/outputs/apk/release/*.apk
-          retention-days: 30
+          retention-days: 90
+          if-no-files-found: error
 
-      - name: Upload Debug APK
-        if: github.event.inputs.build_type == 'debug'
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 14: UPLOAD DEBUG APKs
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 📤 Upload Debug APKs
+        if: |
+          always() &&
+          (steps.build-debug.outcome == 'success')
         uses: actions/upload-artifact@v4
         with:
-          name: android-tv-debug-apk
+          name: Nuvio-TV-Debug-v${{ steps.get-version.outputs.version }}
           path: android/app/build/outputs/apk/debug/*.apk
-          retention-days: 7
+          retention-days: 30
+          if-no-files-found: error
 
-      - name: Create Release (on tag)
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 15: CREATE GITHUB RELEASE (ON TAG)
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 🚀 Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            android/app/build/outputs/apk/release/*.apk
-          body: |
-            ## Nuvio Streaming - Android TV Build
-            
-            This release includes full Android TV support with:
-            - 🎮 D-pad/Remote navigation
-            - 📺 Leanback launcher integration
-            - 🔍 Focus-based navigation with visual feedback
-            - 🎬 Optimized UI for TV viewing distance
-            
-            ### Installation
-            1. Download the APK for your device architecture
-            2. Enable "Install from unknown sources" on your Android TV
-            3. Install the APK using a file manager
-            
-            ### Supported Architectures
-            - `arm64-v8a` - Most modern Android TV devices
-            - `armeabi-v7a` - Older Android TV devices
-            - `x86_64` - Android TV emulators
-            - `universal` - Works on all devices (larger file size)
-          draft: true
+          files: android/app/build/outputs/apk/release/*.apk
+          draft: false
           prerelease: false
           generate_release_notes: true
+          body: |
+            ## 📺 Nuvio Streaming - Android TV v${{ steps.get-version.outputs.version }}
+            
+            ### ✨ Features
+            - 🎮 Full D-pad & Remote Control Support
+            - 📺 Android TV Leanback Launcher Integration
+            - 🔍 Visual Focus Navigation
+            - 🎬 Optimized for TV Viewing
+            - 📱 Works on Phones, Tablets, and TVs
+            
+            ### 📦 Installation
+            1. Download APK for your device architecture
+            2. Enable "Unknown Sources" in TV Settings
+            3. Install using File Manager
+            
+            ### 🏗️ Architecture Support
+            - `arm64-v8a` - Modern Android TV (Recommended)
+            - `armeabi-v7a` - Older Android TV Devices
+            - `x86_64` - Android TV Emulators
+            - `universal` - All Devices (Larger Size)
+            
+            ### 🔧 Technical Details
+            - Android Version: 5.0+ (API 21+)
+            - TV Version: Android TV 5.0+
+            - Build Type: Release (Signed)
+            - Node: ${{ env.NODE_VERSION }}
+            - Java: ${{ env.JAVA_VERSION }}
 
-      # 🧹 CLEANUP - Always run at the end (success or failure)
-      # Clean up build artifacts and caches to free disk space for other workflows
-      # IMPORTANT: APKs are preserved for upload
-      - name: Cleanup disk space
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 16: BUILD STATUS
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 📊 Set build status
+        id: build-status
         if: always()
         run: |
-          echo "=== Disk space before cleanup ==="
-          df -h
-          echo ""
-          echo "=== Cleaning up build artifacts and caches (preserving APKs) ==="
+          if [ "${{ steps.build-release.outcome }}" == "success" ] || [ "${{ steps.build-debug.outcome }}" == "success" ]; then
+            echo "success=true" >> $GITHUB_OUTPUT
+            echo "✅ Build completed successfully!"
+          else
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "❌ Build failed!"
+          fi
+
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 17: CLEANUP (ALWAYS RUNS - PRESERVES APKs)
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 🧹 Cleanup (Preserve APKs)
+        if: always()
+        run: |
+          echo "=== 🧹 Starting Cleanup ==="
+          echo "⚠️  APKs will be preserved!"
           
-          # Clean Gradle cache and wrapper
+          # Clean Gradle caches
+          echo "Cleaning Gradle caches..."
           rm -rf ~/.gradle/caches || true
           rm -rf ~/.gradle/wrapper || true
           
-          # Clean build intermediates BUT preserve APKs
-          # Only delete intermediate build files, not the final APK outputs
+          # Clean build intermediates (NOT outputs!)
+          echo "Cleaning build intermediates..."
           rm -rf android/app/build/intermediates || true
           rm -rf android/app/build/generated || true
           rm -rf android/app/build/tmp || true
           rm -rf android/.gradle || true
           
-          # DO NOT delete android/app/build/outputs/apk - APKs are here!
-          # DO NOT delete android/build - contains build metadata
-          
           # Clean npm cache
+          echo "Cleaning npm cache..."
           rm -rf ~/.npm || true
-          
-          # Remove node_modules (cached by actions/setup-node anyway)
           rm -rf node_modules || true
           
-          # Clean apt cache
+          # Clean system caches
+          echo "Cleaning system caches..."
           sudo apt-get clean || true
-          
-          # Remove Docker build cache (if any Docker operations happened)
           docker system prune -af || true
-          
-          # Remove temporary files (excluding important system temps)
-          sudo rm -rf /tmp/npm-* || true
-          sudo rm -rf /tmp/yarn-* || true
+          sudo rm -rf /tmp/npm-* /tmp/yarn-* || true
           
           echo ""
-          echo "=== APKs are preserved in android/app/build/outputs/apk/ ==="
-          ls -lh android/app/build/outputs/apk/*/*.apk 2>/dev/null || echo "No APKs found (might have failed to build)"
+          echo "=== ✅ APKs Preserved ==="
+          ls -lh android/app/build/outputs/apk/*/*.apk 2>/dev/null || echo "No APKs found"
           
           echo ""
-          echo "=== Disk space after cleanup ==="
+          echo "=== 💽 Final Disk Space ==="
           df -h
         continue-on-error: true
+
+      # ═════════════════════════════════════════════════════════════════════
+      # STEP 18: BUILD SUMMARY
+      # ═════════════════════════════════════════════════════════════════════
+      - name: 📋 Build Summary
+        if: always()
+        run: |
+          echo "════════════════════════════════════════════════════════════"
+          echo "                    BUILD SUMMARY                            "
+          echo "════════════════════════════════════════════════════════════"
+          echo "📦 Version: ${{ steps.get-version.outputs.version }}"
+          echo "🔨 Build Type: ${{ github.event.inputs.build_type || 'release' }}"
+          echo "✅ Release: ${{ steps.build-release.outcome || 'skipped' }}"
+          echo "✅ Debug: ${{ steps.build-debug.outcome || 'skipped' }}"
+          echo "🎯 Status: ${{ steps.build-status.outputs.success == 'true' && 'SUCCESS' || 'FAILED' }}"
+          echo "════════════════════════════════════════════════════════════"
