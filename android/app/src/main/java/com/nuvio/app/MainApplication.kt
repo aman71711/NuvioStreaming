@@ -23,6 +23,7 @@ class MainApplication : Application(), ReactApplication {
     private const val TAG = "MainApplication"
   }
 
+  @Suppress("DEPRECATION")
   override val reactNativeHost: ReactNativeHost = ReactNativeHostWrapper(
       this,
       object : DefaultReactNativeHost(this) {

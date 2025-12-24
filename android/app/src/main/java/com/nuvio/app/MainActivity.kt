@@ -84,7 +84,13 @@ class MainActivity : ReactActivity() {
   private fun ensureWindowVisible() {
     try {
       window?.let { w ->
-        w.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+        // Use WindowInsetsController for API 30+ or fallback for older versions
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+          w.insetsController?.show(android.view.WindowInsets.Type.systemBars())
+        } else {
+          @Suppress("DEPRECATION")
+          w.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+        }
         w.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
       }
     } catch (e: Exception) {
