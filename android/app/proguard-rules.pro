@@ -7,9 +7,33 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
+# React Native Core
+-keep class com.facebook.react.** { *; }
+-keep class com.facebook.hermes.** { *; }
+-keep class com.facebook.jni.** { *; }
+
 # react-native-reanimated
 -keep class com.swmansion.reanimated.** { *; }
 -keep class com.facebook.react.turbomodule.** { *; }
+
+# Sentry - Prevent ASM instrumentation conflicts
+-keepclassmembers class io.sentry.** { *; }
+-keep class io.sentry.** { *; }
+-dontwarn io.sentry.**
+
+# ASM - Keep all ASM classes to prevent instrumentation errors
+-keep class org.objectweb.asm.** { *; }
+-dontwarn org.objectweb.asm.**
+
+# Keep all native methods
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+# Kotlin Reflect and Coroutines
+-keep class kotlin.** { *; }
+-keep class kotlinx.coroutines.** { *; }
+-dontwarn kotlinx.coroutines.**
 
 # Add any project specific keep options here:
 
