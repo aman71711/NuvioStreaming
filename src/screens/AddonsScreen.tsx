@@ -19,6 +19,9 @@ import {
   Switch,
   Linking
 } from 'react-native';
+
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
 import { stremioService, Manifest } from '../services/stremioService';
 import { MaterialIcons } from '@expo/vector-icons';
 import FastImage from '@d11/react-native-fast-image';
@@ -978,6 +981,10 @@ const AddonsScreen = () => {
               style={[styles.reorderButton, isFirstItem && styles.disabledButton]}
               onPress={() => moveAddonUp(item)}
               disabled={isFirstItem}
+              accessible={true}
+              accessibilityLabel={`Move ${item.name} up`}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: isFirstItem }}
             >
               <MaterialIcons
                 name="arrow-upward"
@@ -989,6 +996,10 @@ const AddonsScreen = () => {
               style={[styles.reorderButton, isLastItem && styles.disabledButton]}
               onPress={() => moveAddonDown(item)}
               disabled={isLastItem}
+              accessible={true}
+              accessibilityLabel={`Move ${item.name} down`}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: isLastItem }}
             >
               <MaterialIcons
                 name="arrow-downward"
@@ -1033,6 +1044,9 @@ const AddonsScreen = () => {
                   <TouchableOpacity
                     style={styles.configButton}
                     onPress={() => handleConfigureAddon(item, item.transport)}
+                    accessible={true}
+                    accessibilityLabel={`Configure ${item.name}`}
+                    accessibilityRole="button"
                   >
                     <MaterialIcons name="settings" size={20} color={colors.primary} />
                   </TouchableOpacity>
@@ -1041,6 +1055,9 @@ const AddonsScreen = () => {
                   <TouchableOpacity
                     style={styles.deleteButton}
                     onPress={() => handleRemoveAddon(item)}
+                    accessible={true}
+                    accessibilityLabel={`Remove ${item.name}`}
+                    accessibilityRole="button"
                   >
                     <MaterialIcons name="delete" size={20} color={colors.error} />
                   </TouchableOpacity>
@@ -1225,6 +1242,10 @@ const AddonsScreen = () => {
                   style={[styles.addButton, { opacity: installing || !addonUrl ? 0.6 : 1 }]}
                   onPress={() => handleAddAddon()}
                   disabled={installing || !addonUrl}
+                  accessible={true}
+                  accessibilityLabel={installing ? 'Loading addon' : 'Add addon from URL'}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: installing || !addonUrl }}
                 >
                   <Text style={styles.addButtonText}>
                     {installing ? 'Loading...' : 'Add Addon'}

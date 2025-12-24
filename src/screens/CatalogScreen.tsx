@@ -13,6 +13,8 @@ import {
   InteractionManager,
   ScrollView
 } from 'react-native';
+
+const isTVDevice = Platform.isTV || false;
 import { FlashList } from '@shopify/flash-list';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -772,6 +774,11 @@ const CatalogScreen: React.FC<CatalogScreenProps> = ({ route, navigation }) => {
         ]}
         onPress={() => navigation.navigate('Metadata', { id: item.id, type: item.type, addonId })}
         activeOpacity={0.7}
+        hasTVPreferredFocus={isTVDevice && index === 0}
+        accessible={true}
+        accessibilityLabel={`${item.name || item.id}, ${item.type}`}
+        accessibilityRole="button"
+        accessibilityHint="Opens content details"
       >
         <FastImage
           source={{ uri: optimizePosterUrl(item.poster) }}
@@ -888,6 +895,10 @@ const CatalogScreen: React.FC<CatalogScreenProps> = ({ route, navigation }) => {
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
+            hasTVPreferredFocus={isTVDevice}
+            accessible={true}
+            accessibilityLabel="Back"
+            accessibilityRole="button"
           >
             <MaterialIcons name="chevron-left" size={28} color={colors.white} />
             <Text style={styles.backText}>Back</Text>
@@ -907,6 +918,10 @@ const CatalogScreen: React.FC<CatalogScreenProps> = ({ route, navigation }) => {
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
+            hasTVPreferredFocus={isTVDevice}
+            accessible={true}
+            accessibilityLabel="Back"
+            accessibilityRole="button"
           >
             <MaterialIcons name="chevron-left" size={28} color={colors.white} />
             <Text style={styles.backText}>Back</Text>
@@ -925,6 +940,10 @@ const CatalogScreen: React.FC<CatalogScreenProps> = ({ route, navigation }) => {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
+          hasTVPreferredFocus={isTVDevice}
+          accessible={true}
+          accessibilityLabel="Back"
+          accessibilityRole="button"
         >
           <MaterialIcons name="chevron-left" size={28} color={colors.white} />
           <Text style={styles.backText}>Back</Text>

@@ -16,6 +16,9 @@ import {
   Clipboard,
   Image as RNImage,
 } from 'react-native';
+
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -1863,7 +1866,11 @@ export const StreamsScreen = () => {
                 Platform.OS === 'android' ? { paddingTop: 45 } : null
               ]}
               onPress={handleBack}
-              activeOpacity={0.7}
+              activeOpacity={isTVDevice ? 1 : 0.7}
+              accessible={true}
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
+              hasTVPreferredFocus={isTVDevice}
             >
               <MaterialIcons name="arrow-back" size={24} color={colors.white} />
               <Text style={styles.backButtonText}>

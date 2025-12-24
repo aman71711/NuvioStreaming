@@ -8,6 +8,9 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
+
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -326,7 +329,11 @@ const OnboardingScreen = () => {
             onPress={handleNext}
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
-            activeOpacity={1}
+            activeOpacity={isTVDevice ? 1 : 0.8}
+            accessible={true}
+            accessibilityLabel={currentIndex === onboardingData.length - 1 ? 'Get Started' : 'Continue to next step'}
+            accessibilityRole="button"
+            hasTVPreferredFocus={isTVDevice}
           >
             <Animated.View style={[styles.button, buttonStyle]}>
               <Text style={styles.buttonText}>

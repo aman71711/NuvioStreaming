@@ -1,5 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
+
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
 import FastImage from '@d11/react-native-fast-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Episode } from '../../../types/metadata';
@@ -88,7 +91,11 @@ export const EpisodeCard: React.FC<EpisodeCardProps> = ({
         isCurrent && { borderWidth: 2, borderColor: currentTheme.colors.primary }
       ]}
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={isTVDevice ? 1 : 0.7}
+      accessible={true}
+      accessibilityLabel={`${episodeString}${episode.name ? ` ${episode.name}` : ''}${isCurrent ? ', Currently playing' : ''}`}
+      accessibilityRole="button"
+      hasTVPreferredFocus={isTVDevice && isCurrent}
     >
       <View style={styles.episodeImageContainer}>
         <FastImage

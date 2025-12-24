@@ -1,5 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet, Platform, useWindowDimensions } from 'react-native';
+
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
 import { MaterialIcons } from '@expo/vector-icons';
 import Animated, {
   FadeIn,
@@ -178,8 +181,12 @@ export const SourcesModal: React.FC<SourcesModalProps> = ({
                           opacity: (isChangingSource && !isSelected) ? 0.6 : 1,
                         }}
                         onPress={() => handleStreamSelect(stream)}
-                        activeOpacity={0.7}
+                        activeOpacity={isTVDevice ? 1 : 0.7}
                         disabled={isChangingSource === true}
+                        accessible={true}
+                        accessibilityLabel={`${stream.title || stream.name || 'Stream'} ${quality ? quality + 'p' : ''}`}
+                        accessibilityRole="button"
+                        hasTVPreferredFocus={isTVDevice && index === 0}
                       >
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                           <View style={{ flex: 1 }}>

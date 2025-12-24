@@ -17,6 +17,8 @@ import {
     RefreshControl,
     Dimensions
 } from 'react-native';
+
+const isTVDevice = Platform.isTV || false;
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -1581,6 +1583,10 @@ const DebridIntegrationScreen = () => {
                 <TouchableOpacity
                     onPress={() => navigation.goBack()}
                     style={styles.backButton}
+                    hasTVPreferredFocus={isTVDevice}
+                    accessible={true}
+                    accessibilityLabel="Back"
+                    accessibilityRole="button"
                 >
                     <Feather name="arrow-left" size={24} color={colors.white} />
                 </TouchableOpacity>
@@ -1592,6 +1598,10 @@ const DebridIntegrationScreen = () => {
                 <TouchableOpacity
                     style={[styles.tab, activeTab === 'torbox' && styles.activeTab]}
                     onPress={() => setActiveTab('torbox')}
+                    accessible={true}
+                    accessibilityLabel="TorBox tab"
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: activeTab === 'torbox' }}
                 >
                     <Text style={[styles.tabText, activeTab === 'torbox' && styles.activeTabText]}>
                         TorBox
@@ -1600,6 +1610,10 @@ const DebridIntegrationScreen = () => {
                 <TouchableOpacity
                     style={[styles.tab, activeTab === 'torrentio' && styles.activeTab]}
                     onPress={() => setActiveTab('torrentio')}
+                    accessible={true}
+                    accessibilityLabel="Torrentio tab"
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: activeTab === 'torrentio' }}
                 >
                     <Text style={[styles.tabText, activeTab === 'torrentio' && styles.activeTabText]}>
                         Torrentio

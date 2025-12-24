@@ -106,7 +106,8 @@ const DownloadItemComponent: React.FC<{
   onPress: (item: DownloadItem) => void;
   onAction: (item: DownloadItem, action: 'pause' | 'resume' | 'cancel' | 'retry') => void;
   onRequestRemove: (item: DownloadItem) => void;
-}> = React.memo(({ item, onPress, onAction, onRequestRemove }) => {
+  hasTVPreferredFocus?: boolean;
+}> = React.memo(({ item, onPress, onAction, onRequestRemove, hasTVPreferredFocus = false }) => {
   const { currentTheme } = useTheme();
   const { showSuccess, showInfo } = useToast();
   const [posterUrl, setPosterUrl] = useState<string | null>(item.posterUrl || null);
@@ -219,6 +220,7 @@ const DownloadItemComponent: React.FC<{
       accessibilityLabel={`${item.title}${item.type === 'series' && item.season && item.episode ? `, Season ${item.season} Episode ${item.episode}` : ''}. Status: ${item.status}`}
       accessibilityRole="button"
       accessibilityHint="Double tap to play, long press for options"
+      hasTVPreferredFocus={hasTVPreferredFocus}
     >
       {/* Poster */}
       <View style={styles.posterContainer}>
@@ -669,12 +671,13 @@ const DownloadsScreen: React.FC = () => {
         <FlatList
           data={filteredDownloads}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <DownloadItemComponent
               item={item}
               onPress={handleDownloadPress}
               onAction={handleDownloadAction}
               onRequestRemove={handleRequestRemove}
+              hasTVPreferredFocus={isTVDevice && index === 0}
             />
           )}
           style={{ backgroundColor: currentTheme.colors.darkBackground }}

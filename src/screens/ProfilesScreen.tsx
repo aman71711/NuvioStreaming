@@ -11,6 +11,8 @@ import {
   TextInput,
   Modal
 } from 'react-native';
+
+const isTVDevice = Platform.isTV || false;
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
@@ -181,7 +183,7 @@ const ProfilesScreen: React.FC = () => {
     navigation.goBack();
   };
 
-  const renderItem = ({ item }: { item: Profile }) => (
+  const renderItem = ({ item, index }: { item: Profile; index: number }) => (
     <View style={styles.profileItem}>
       <TouchableOpacity
         style={[
@@ -192,6 +194,11 @@ const ProfilesScreen: React.FC = () => {
           }
         ]}
         onPress={() => handleSelectProfile(item.id)}
+        hasTVPreferredFocus={isTVDevice && index === 0}
+        accessible={true}
+        accessibilityLabel={`${item.name} profile${item.isActive ? ', active' : ''}`}
+        accessibilityRole="button"
+        accessibilityHint="Select this profile"
       >
         <View style={styles.avatarContainer}>
           <MaterialIcons
@@ -214,6 +221,9 @@ const ProfilesScreen: React.FC = () => {
           <TouchableOpacity
             style={styles.deleteButton}
             onPress={() => handleDeleteProfile(item.id)}
+            accessible={true}
+            accessibilityLabel={`Delete ${item.name} profile`}
+            accessibilityRole="button"
           >
             <MaterialIcons name="delete" size={24} color={currentTheme.colors.error} />
           </TouchableOpacity>
@@ -231,6 +241,10 @@ const ProfilesScreen: React.FC = () => {
           onPress={handleBack}
           style={styles.backButton}
           activeOpacity={0.7}
+          hasTVPreferredFocus={isTVDevice}
+          accessible={true}
+          accessibilityLabel="Back"
+          accessibilityRole="button"
         >
           <MaterialIcons
             name="arrow-back"

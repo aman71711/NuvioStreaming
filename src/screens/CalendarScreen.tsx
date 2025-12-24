@@ -13,6 +13,8 @@ import {
   SectionList,
   Platform
 } from 'react-native';
+
+const isTVDevice = Platform.isTV || false;
 import { InteractionManager } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
@@ -133,10 +135,18 @@ const CalendarScreen = () => {
           style={[styles.episodeItem, { borderBottomColor: currentTheme.colors.border + '20' }]}
           onPress={() => handleEpisodePress(item)}
           activeOpacity={0.7}
+          hasTVPreferredFocus={isTVDevice && index === 0}
+          accessible={true}
+          accessibilityLabel={`${item.seriesName}, Season ${item.season} Episode ${item.episode}, ${item.title}`}
+          accessibilityRole="button"
+          accessibilityHint="Opens episode details"
         >
           <TouchableOpacity
             onPress={() => handleSeriesPress(item.seriesId, item)}
             activeOpacity={0.7}
+            accessible={true}
+            accessibilityLabel={`View ${item.seriesName} series`}
+            accessibilityRole="button"
           >
             <FastImage
               source={{ uri: imageUrl || '' }}
@@ -290,6 +300,10 @@ const CalendarScreen = () => {
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
+          hasTVPreferredFocus={isTVDevice}
+          accessible={true}
+          accessibilityLabel="Back"
+          accessibilityRole="button"
         >
           <MaterialIcons name="arrow-back" size={24} color={currentTheme.colors.text} />
         </TouchableOpacity>

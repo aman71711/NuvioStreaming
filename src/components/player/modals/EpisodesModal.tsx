@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, useWindowDimensions, StyleSheet, Platform, ActivityIndicator } from 'react-native';
+
+// TV platform detection
+const isTVDevice = Platform.isTV || false;
 import { MaterialIcons } from '@expo/vector-icons';
 import Animated, {
   FadeIn,
